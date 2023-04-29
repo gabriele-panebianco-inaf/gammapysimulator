@@ -1,3 +1,16 @@
+#######################################################
+#
+# Authors:
+#
+#   Gabriele Panebianco <gabriele.panebianco@inaf.it>
+#
+#######################################################
+
+# Folders
+.vscode
+
+#######################################################
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
