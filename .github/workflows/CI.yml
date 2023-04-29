@@ -1,0 +1,58 @@
+name: CI
+
+on: [push, pull_request]
+
+env:
+  PYTEST_ADDOPTS: --color=yes
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # gammapysimulator dependency
+        python-version: [3.9]
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Add conda to system path
+        run: |
+          # $CONDA is an environment variable pointing to the root of the miniconda directory
+          echo $CONDA/bin >> $GITHUB_PATH
+      
+      - name: Install dependencies
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+          . $CONDA/etc/profile.d/conda.sh
+          conda config --set always_yes yes --set changeps1 no
+          sed -i -e "s/- python=.*/- python=$PYTHON_VERSION/g" environment.yml
+          echo "Creating conda env"
+          conda env create -n gammapysimulator -f environment.yml
+          conda activate gammapysimulator
+          echo "Run setup.sh"
+          ./setup.sh
+
+      #- name: Static codechecks
+      #  run: |
+      #      source $CONDA/etc/profile.d/conda.sh
+      #      conda activate gammapysimulator
+      #      echo "Installing additional pip packages: pyflakes"
+      #      pip install pyflakes
+      #      pyflakes gammapysimulator
+
+      - name: Test with pytest
+        run: |
+            source $CONDA/etc/profile.d/conda.sh
+            conda activate gammapysimulator
+            ./start_test.sh
+      
+      #- uses: codecov/codecov-action@v1
