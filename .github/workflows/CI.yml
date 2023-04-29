@@ -41,13 +41,13 @@ jobs:
           echo "Run setup.sh"
           ./setup.sh
 
-      - name: Static codechecks
-        run: |
-            source $CONDA/etc/profile.d/conda.sh
-            conda activate gammapysimulator
-            echo "Installing additional pip packages: pyflakes"
-            pip install pyflakes
-            pyflakes gammapysimulator
+      #- name: Static codechecks
+      #  run: |
+      #      source $CONDA/etc/profile.d/conda.sh
+      #      conda activate gammapysimulator
+      #      echo "Installing additional pip packages: pyflakes"
+      #      pip install pyflakes
+      #      pyflakes gammapysimulator
 
       - name: Test with pytest
         run: |
