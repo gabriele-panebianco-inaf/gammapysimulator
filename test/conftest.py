@@ -22,6 +22,8 @@ def path_configuration_files(path_repository):
     """
     
     path_data = path_repository.joinpath("test/data")
-    files={'configuration':str(path_data.joinpath("configuration.yml"))
+    files={'configuration':str(path_data.joinpath("configuration.yml")),
+           'model':str(path_data.joinpath("model.yml")),
+           'irf':str(path_data.joinpath('Prod5-North-20deg-AverageAz-4LSTs09MSTs.1800s-v0.1.fits'))
            }
     return files
