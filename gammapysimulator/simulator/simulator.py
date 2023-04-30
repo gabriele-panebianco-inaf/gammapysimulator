@@ -89,7 +89,7 @@ class Simulator:
         Set the Datasets object according to 3D or 1D Analysis.
         """
         
-        if self.analysis=="3D":
+        if self.conf.analysis=="3D":
             empty = MapDataset.create(geom = self.conf.geometry,
                                       energy_axis_true = self.conf.axis_energy_true,
                                       name = "empty",
@@ -99,7 +99,7 @@ class Simulator:
             safe_mask_maker = SafeMaskMaker(methods = ["aeff-default","offset-max"],
                                             offset_max = 2*self.conf.FoVRadius
                                             )
-        elif self.analysis=="1D":
+        elif self.conf.analysis=="1D":
             empty = SpectrumDataset.create(geom = self.conf.geometry,
                                            energy_axis_true = self.conf.axis_energy_true,
                                            name = "empty"

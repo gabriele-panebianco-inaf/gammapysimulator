@@ -14,6 +14,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from gammapy.data import Observation, Observations
+from gammapy.datasets import Datasets
 from gammapy.irf import load_cta_irfs
 from gammapy.modeling.models import SkyModel
 
@@ -60,7 +61,7 @@ class TestSimulator:
     def test_init(self, path_configuration_files):
         """Test that the class is correctly instantiated."""
         
-        # Instantiate Configurator
+        # Instantiate Simulator
         sourcesimulator = simulator.Simulator(path_configuration_files['configuration'])
         
         # Assert Class and attributes
@@ -76,6 +77,9 @@ class TestSimulator:
         # Instantiate Configurator
         sourcesimulator = simulator.Simulator(path_configuration_files['configuration'])
         observations = sourcesimulator.SetObservations()
+        
+        # Assert PSF Containment
+        assert sourcesimulator.psf_containment
         
         # Test Number of Observations
         assert len(sourcesimulator.observations)==len(mock_Observations)
@@ -102,4 +106,20 @@ class TestSimulator:
             assert simu_obs.gti.time_start == mock_obs.gti.time_start
             assert simu_obs.gti.time_stop == mock_obs.gti.time_stop
             assert simu_obs.gti.time_sum == mock_obs.gti.time_sum
+            
+    def test_SetDatasets(self, path_configuration_files):
+        """Test that Datasets are correctly set."""
+        
+        # Instantiate Simulator
+        sourcesimulator = simulator.Simulator(path_configuration_files['configuration'])
+        
+        # Run Dataset Reduction
+        sourcesimulator.SetDatasets()
+        
+        assert isinstance(sourcesimulator.datasets, Datasets)
+        
+        # Test Number of Observations
+        assert len(sourcesimulator.observations)==25
+        
+        # TODO: Assert other info about datasets
         
