@@ -11,7 +11,7 @@ Geometry:
     Unit : s
     Start: -5.0
     Stop : 20.0
-    Resolution: 0.2
+    Resolution: 1.0
   Space:
     Frame: fk5
     Unit: deg 

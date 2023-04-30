@@ -59,7 +59,7 @@ class TestSimulationConfigurator:
         assert configurator.timeUnit == u.s
         assert configurator.timeStart.value== pytest.approx(-5,1E-2)
         assert configurator.timeStop.value == pytest.approx(20,1E-2)
-        assert configurator.timeReso.value == pytest.approx(0.2,1E-2)
+        assert configurator.timeReso.value == pytest.approx(1.0,1E-2)
         assert configurator.timeRef  == Time("2023-01-01T00:00:00")
         assert configurator.energyUnit == u.TeV
         assert configurator.axis_energy_reco == MapAxis.from_energy_bounds("0.3 TeV", "100 TeV", 4, per_decade=True,name='energy')

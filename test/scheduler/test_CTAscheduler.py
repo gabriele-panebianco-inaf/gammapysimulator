@@ -15,8 +15,6 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from gammapy.data import Observation, Observations
 from gammapy.irf import load_cta_irfs
-from gammapy.maps import MapAxis, WcsGeom
-from pathlib import Path
 
 from gammapysimulator.configure import configure
 from gammapysimulator.scheduler import CTAscheduler
@@ -27,8 +25,8 @@ from gammapysimulator.scheduler import CTAscheduler
 def mock_Observations(path_configuration_files):
     """Define Mock Observations"""
     
-    ObservationsStart= np.linspace(-5,20,125,endpoint=False)
-    ObservationsStop = ObservationsStart+0.2
+    ObservationsStart= np.linspace(-5,20,25,endpoint=False)
+    ObservationsStop = ObservationsStart+1.0
     ObservationsStart= ObservationsStart.tolist()* u.s
     ObservationsStop = ObservationsStop.tolist() * u.s
     
@@ -88,12 +86,12 @@ class TestCTAScheduler:
         ObservationsStart, ObservationsStop = scheduler.DefineSchedule()
         
         # Assert size
-        assert ObservationsStart.size==125
-        assert ObservationsStop.size==125
+        assert ObservationsStart.size==25
+        assert ObservationsStop.size==25
         
         # Assert content
-        my_start = np.linspace(-5,20,125,endpoint=False)
-        my_stop = my_start+0.2
+        my_start = np.linspace(-5,20,25,endpoint=False)
+        my_stop = my_start+1.0
         assert not np.any(ObservationsStart.value-my_start)
         assert not np.any(ObservationsStop.value-my_stop)
         
