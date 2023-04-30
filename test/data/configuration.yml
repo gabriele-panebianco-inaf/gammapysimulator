@@ -1,0 +1,32 @@
+Simulation:
+  RandomSeed: 7
+  SimuNumber: 2
+  OutputDirectory : $GAMMAPYSIMULATOR/SIMULATIONS/
+  OutputID: test
+  Product: DL3
+  Analysis: 3D
+Geometry:
+  Time:
+    Reference: 2023-01-01T00:00:00
+    Unit : s
+    Start: -5.0
+    Stop : 20.0
+    Resolution: 0.2
+  Space:
+    Frame: fk5
+    Unit: deg 
+    PointingLon: 83.63
+    PointingLat: 22.01
+    FoVRadius: 5.0
+    Resolution: 0.02
+  Energy:
+    Unit: TeV
+    RangeReco: [0.3, 100]
+    RangeTrue: [0.1, 300]
+    RecoBinPerDecade: 4
+    TrueBinPerDecade: 5
+IRF:
+  Instrument: CTA
+  FilePath: $GAMMAPYSIMULATOR/test/data/Prod5-North-20deg-AverageAz-4LSTs09MSTs.1800s-v0.1.fits
+Model:
+  FilePath: $GAMMAPYSIMULATOR/test/data/model.yml
