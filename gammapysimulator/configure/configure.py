@@ -39,7 +39,7 @@ class SimulationConfigurator:
         """
 
         # Load YAML as a dict
-        self.log.info("Loading YAML file...")
+        self.log.info(f"Load Configuration YAML: {ConfigurationFileName}")
         with open(ConfigurationFileName) as f:
             configuration = yaml.load(f, Loader = yaml.SafeLoader)
         
