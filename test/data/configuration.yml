@@ -1,7 +1,7 @@
 Simulation:
   RandomSeed: 7
   SimuNumber: 2
-  OutputDirectory : /home/gabriele/Documents/gammapysimulator/SIMULATIONS/
+  OutputDirectory : $GAMMAPYSIMULATOR/SIMULATIONS/
   OutputID: test
   Product: DL3
   Analysis: 3D
@@ -27,6 +27,6 @@ Geometry:
     TrueBinPerDecade: 5
 IRF:
   Instrument: CTA
-  FilePath: /home/gabriele/Documents/gammapysimulator/test/data/Prod5-North-20deg-AverageAz-4LSTs09MSTs.1800s-v0.1.fits
+  FilePath: $GAMMAPYSIMULATOR/test/data/Prod5-North-20deg-AverageAz-4LSTs09MSTs.1800s-v0.1.fits
 Model:
-  FilePath: /home/gabriele/Documents/gammapysimulator/test/data/model.yml
+  FilePath: $GAMMAPYSIMULATOR/test/data/model.yml

@@ -15,7 +15,7 @@ from regions import CircleSkyRegion
 
 import yaml
 
-from gammapysimulator.tools import logger
+from gammapysimulator.tools import logger, utils
 
 class SimulationConfigurator:
     """
@@ -48,7 +48,7 @@ class SimulationConfigurator:
         
         self.simN = int(configuration['Simulation']['SimuNumber'])
         
-        self.OutputDirectory = Path(configuration['Simulation']['OutputDirectory']).absolute()
+        self.OutputDirectory = Path(utils.get_absolute_path(configuration['Simulation']['OutputDirectory'])).absolute()
         self.OutputDirectory.mkdir(parents=True, exist_ok=True)
         
         self.OutputID = str(configuration['Simulation']['OutputID'])
@@ -62,7 +62,7 @@ class SimulationConfigurator:
             raise ValueError(f"Only 1D or 3D allowed, not {self.analysis}")
         
         # Model filename
-        self.modelfilename = Path(configuration['Model']['FilePath']).absolute()
+        self.modelfilename = Path(utils.get_absolute_path(configuration['Model']['FilePath'])).absolute()
         if not self.modelfilename.is_file():
             raise ValueError(f"Model file not found: {self.modelfilename}")
         
@@ -71,7 +71,7 @@ class SimulationConfigurator:
         if self.instrument not in ["CTA", "Fermi-GBM"]:
             raise ValueError(f"Only CTA or Fermi-GBM allowed, not {self.instrument}")
         
-        self.IRFfilename = Path(configuration['IRF']['FilePath']).absolute()
+        self.IRFfilename = Path(utils.get_absolute_path(configuration['IRF']['FilePath'])).absolute()
         if not self.IRFfilename.is_file():
             raise ValueError(f"IRF file not found: {self.IRFfilename}")
         
