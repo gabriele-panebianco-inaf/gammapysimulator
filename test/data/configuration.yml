@@ -17,15 +17,16 @@ Geometry:
     Unit: deg 
     PointingLon: 83.63
     PointingLat: 22.01
-    FoV: 5.0
+    FoVRadius: 5.0
     Resolution: 0.02
   Energy:
     Unit: TeV
     RangeReco: [0.3, 100]
     RangeTrue: [0.1, 300]
     RecoBinPerDecade: 4
+    TrueBinPerDecade: 5
 IRF:
   Instrument: CTA
-  FilePath: /home/gabriele/Documents/gammapysimulator/test/data/Prod5-North-20deg-AverageAz-4LSTs.1800s-v0.1.fits
+  FilePath: /home/gabriele/Documents/gammapysimulator/test/data/Prod5-North-20deg-AverageAz-4LSTs09MSTs.1800s-v0.1.fits
 Model:
   FilePath: /home/gabriele/Documents/gammapysimulator/test/data/model.yml
