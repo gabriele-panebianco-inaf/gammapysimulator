@@ -6,7 +6,7 @@
 #
 #######################################################
 
-from gammapy.datasets import MapDataset, SpectrumDataset, Datasets
+from gammapy.datasets import MapDataset, SpectrumDataset, Datasets, SpectrumDatasetOnOff, MapDatasetOnOff
 from gammapy.makers import MapDatasetMaker, SpectrumDatasetMaker, SafeMaskMaker
 from gammapy.modeling.models import PowerLawSpectralModel, PointSpatialModel, SkyModel, ConstantTemporalModel
 from tqdm import tqdm
@@ -84,9 +84,14 @@ class Simulator:
 
         return models
         
-    def SetDatasets(self):
+    def SimulateCTA(self):
         """
-        Set the Datasets object according to 3D or 1D Analysis.
+        Run the simulation with CTA IRFs.
+        
+        Return
+        ------
+        datasets : gammapy.datasets.Datasets()
+            Collection of SpectrumDatasetOnOff (1D) or MapDatasetOnOff (3D) with simulated data.
         """
         
         if self.conf.analysis=="3D":
@@ -124,9 +129,26 @@ class Simulator:
             # Set the source model and compute the predicted excess counts.
             dataset.models = self.models
 
-            datasets.append(dataset)
+            # Fake ON counts
+            dataset.fake(random_state=self.conf.seed)
+            
+            # Fake OFF counts realization
+            if self.conf.analysis=="3D":
+                dataset_onoff = MapDatasetOnOff.from_map_dataset(dataset=dataset,
+                                                                 acceptance=1,
+                                                                 acceptance_off=5
+                                                                 )
+            elif self.conf.analysis=="1D":
+                dataset_onoff = SpectrumDatasetOnOff.from_spectrum_dataset(dataset=dataset,
+                                                                           acceptance=1,
+                                                                           acceptance_off=5
+                                                                           )
+            dataset_onoff.fake(npred_background=dataset.npred_background())
+            
+            # Add current dataset to the Datasets() object
+            datasets.append(dataset_onoff)
             
         self.log.info(f"Reduction performed in {float(time()-now):.3f} s.")
         
-        # Set Datasets
-        self.datasets = datasets
+        # Return the simulated Datasets
+        return datasets
