@@ -35,8 +35,10 @@ jobs:
           . $CONDA/etc/profile.d/conda.sh
           conda config --set always_yes yes --set changeps1 no
           sed -i -e "s/- python=.*/- python=$PYTHON_VERSION/g" environment.yml
+          echo "Install Mamba"
+          conda install mamba -n base -c conda-forge
           echo "Creating conda env"
-          conda env create -n gammapysimulator -f environment.yml
+          mamba env create -n gammapysimulator -f environment.yml
           conda activate gammapysimulator
           echo "Run setup.sh"
           ./setup.sh
