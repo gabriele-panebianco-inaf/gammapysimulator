@@ -27,7 +27,7 @@ class SimulatorLogger(metaclass=Singleton):
                  LogLevel='DEBUG',
                  LogToFile=False,
                  LogOutDir='log',
-                 LogFormat='%(asctime)s - %(module)12s %(funcName)15s - %(levelname)s - %(message)s'                 
+                 LogFormat='%(asctime)s - %(module)12s %(funcName)20s - %(levelname)7s - %(message)s'                 
                  )->None:      
         """
         Initialise logger defining logging level, format and output.
