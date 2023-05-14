@@ -8,7 +8,7 @@
 
 from gammapy.datasets import MapDataset, SpectrumDataset, Datasets, SpectrumDatasetOnOff, MapDatasetOnOff
 from gammapy.makers import MapDatasetMaker, SpectrumDatasetMaker, SafeMaskMaker
-from gammapy.modeling.models import PowerLawSpectralModel, PointSpatialModel, SkyModel, ConstantTemporalModel
+from gammapy.modeling.models import Models, SkyModel
 from tqdm import tqdm
 from time import time
 
@@ -49,6 +49,11 @@ class Simulator:
     def SetObservations(self):
         """
         Set the Observations object according to the Instrument.
+        
+        Return
+        ------
+        observations : gammapy.data.Observations
+            Observations containing temporal and IRFs information.
         """
         
         if self.conf.instrument=="CTA":
@@ -67,21 +72,19 @@ class Simulator:
     def SetModels(self):
         """
         Set the Simulation Models.
+        
+        Return
+        ------
+        models :  gammapy.modeling.Models
+            Models of the Simulation.
         """
-        spectral = PowerLawSpectralModel(index=2.4,
-                                         amplitude="5.7e-11 cm-2 s-1 TeV-1",
-                                         reference="1 TeV"
-                                         )
+        # Read Models from a YAML file
+        self.log.info(f"Load Models from: {self.conf.modelfilename}")
+        models = Models.read(self.conf.modelfilename)
         
-        temporal = ConstantTemporalModel(const=1)
+        # Print
+        self.log.info(models)
         
-        spatial = PointSpatialModel(lon_0="83.00 deg", lat_0="22.50 deg",frame="fk5")
-        
-        models = SkyModel(spectral_model = spectral,
-                          spatial_model = spatial,
-                          temporal_model=temporal,
-                          name = "Current")
-
         return models
 
     def RunSimulation(self):

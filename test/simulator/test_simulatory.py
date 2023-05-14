@@ -10,7 +10,7 @@ import pytest
 
 from gammapy.data import Observations
 from gammapy.datasets import Datasets
-from gammapy.modeling.models import SkyModel
+from gammapy.modeling.models import SkyModel, Models
 
 from gammapysimulator.configure import configure
 from gammapysimulator.simulator import simulator
@@ -34,7 +34,7 @@ class TestSimulator:
         # Assert Class and attributes
         assert isinstance(sourcesimulator, simulator.Simulator)
         assert isinstance(sourcesimulator.conf, configure.SimulationConfigurator)
-        assert isinstance(sourcesimulator.models, SkyModel)
+        assert isinstance(sourcesimulator.models, Models)
         assert isinstance(sourcesimulator.observations, Observations)
         assert sourcesimulator.psf_containment
         
