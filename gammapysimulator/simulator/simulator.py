@@ -83,7 +83,23 @@ class Simulator:
                           name = "Current")
 
         return models
+
+    def RunSimulation(self):
+        """
+        Call the simulation function according to selected instrument.
         
+        Return
+        ------
+        datasets : gammapy.datasets.Datasets()
+            Collection of SpectrumDatasetOnOff (1D) or MapDatasetOnOff (3D) with simulated data.
+        """
+        if self.conf.instrument=="CTA":
+            datasets = self.SimulateCTA()
+        else:
+            raise NotImplementedError
+        
+        return datasets
+    
     def SimulateCTA(self):
         """
         Run the simulation with CTA IRFs.
