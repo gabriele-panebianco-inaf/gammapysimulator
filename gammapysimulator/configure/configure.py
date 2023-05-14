@@ -113,6 +113,15 @@ class SimulationConfigurator:
                                  frame= self.frame
                                  )
         
+        # Target parameters
+        self.target = SkyCoord(float(configuration['Target']['TargetLon']),
+                               float(configuration['Target']['TargetLat']),
+                               unit = self.frameUnit,
+                               frame= self.frame
+                               )
+        self.RegionRadius = float(configuration['Target']['RegionRadius']) * self.frameUnit
+        
+        # Full Geometry of the Analysis
         if self.analysis=="3D":
             geometry = WcsGeom.create(skydir= self.pointing,
                                       binsz = self.resolution.to('deg').value,
@@ -121,7 +130,7 @@ class SimulationConfigurator:
                                       axes  = [self.axis_energy_reco]
                                       )
         elif self.analysis=="1D":
-            geometry = RegionGeom.create(CircleSkyRegion(self.pointing, self.FoVRadius),
+            geometry = RegionGeom.create(CircleSkyRegion(self.target, self.RegionRadius),
                                          axes = [self.axis_energy_reco]
                                          )
         self.geometry = geometry
