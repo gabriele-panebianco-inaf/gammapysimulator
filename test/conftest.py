@@ -39,10 +39,10 @@ def path_configuration_files(path_repository):
 def Mock_Observations(path_configuration_files):
     """Define Mock Observations"""
     
-    ObservationsStart= np.linspace(-2,2,4,endpoint=False)
+    ObservationsStart= np.linspace(0,4,4,endpoint=False)
     ObservationsStop = ObservationsStart+1.0
-    ObservationsStart= ObservationsStart.tolist()* u.s
-    ObservationsStop = ObservationsStop.tolist() * u.s
+    ObservationsStart= ObservationsStart.tolist()* u.h
+    ObservationsStop = ObservationsStop.tolist() * u.h
     
     pointing = SkyCoord(83.63, 22.41, frame="fk5", unit="deg")
     irfs = load_cta_irfs(path_configuration_files['irf'])

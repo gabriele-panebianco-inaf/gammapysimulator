@@ -50,17 +50,17 @@ class TestSimulationConfigurator:
         # Assert attributes value
         assert configurator.seed == 7
         assert configurator.simN == 2
-        assert configurator.OutputDirectory == path_repository.joinpath("SIMULATIONS/")
+        assert configurator.OutputDirectory == path_repository.joinpath("SIMULATIONS/test/")
         assert configurator.OutputID == "test"
         assert configurator.product == "DL4"
         assert configurator.analysis == "1D"
         assert configurator.modelfilename == Path(path_configuration_files['model'])
         assert configurator.instrument == "CTA"
         assert configurator.IRFfilename== Path(path_configuration_files['irf'])
-        assert configurator.timeUnit == u.s
-        assert configurator.timeStart.value== pytest.approx(-2.0, 1E-2)
-        assert configurator.timeStop.value == pytest.approx( 2.0, 1E-2)
-        assert configurator.timeReso.value == pytest.approx( 1.0, 1E-2)
+        assert configurator.timeUnit == u.h
+        assert configurator.timeStart.value== pytest.approx(0.0, 1E-2)
+        assert configurator.timeStop.value == pytest.approx(4.0, 1E-2)
+        assert configurator.timeReso.value == pytest.approx(1.0, 1E-2)
         assert configurator.timeRef  == Time("2023-01-01T00:00:00")
         assert configurator.energyUnit == u.TeV
         assert configurator.axis_energy_reco == MapAxis.from_energy_bounds("0.3 TeV", "100 TeV", 4, per_decade=True,name='energy')

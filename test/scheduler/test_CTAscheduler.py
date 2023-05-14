@@ -57,7 +57,7 @@ class TestCTAScheduler:
         assert ObservationsStop.size==4
         
         # Assert content
-        my_start = np.linspace(-2,2,4,endpoint=False)
+        my_start = np.linspace(0,4,4,endpoint=False)
         my_stop = my_start+1.0
         assert not np.any(ObservationsStart.value-my_start)
         assert not np.any(ObservationsStop.value-my_stop)

@@ -8,9 +8,9 @@ Simulation:
 Geometry:
   Time:
     Reference: 2023-01-01T00:00:00
-    Unit : s
-    Start: -2.0
-    Stop : 2.0
+    Unit : h
+    Start: 0.0
+    Stop : 4.0
     Resolution: 1.0
   Space:
     Frame: fk5

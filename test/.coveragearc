@@ -1,0 +1,16 @@
+# .coveragerc to control coverage.py
+[run]
+omit = 
+    tests/*
+    */__init__.py
+
+[report]
+# Regexes for lines to exclude from consideration
+exclude_also =
+    if __name__ == .__main__.:
+
+    # Don't complain about abstract methods, they aren't run:
+    @(abc\.)?abstractmethod
+
+[html]
+directory = coverage_html_report
