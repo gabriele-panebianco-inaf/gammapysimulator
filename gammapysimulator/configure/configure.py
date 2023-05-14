@@ -13,6 +13,7 @@ from gammapy.maps import RegionGeom, WcsGeom, MapAxis
 from pathlib import Path
 from regions import CircleSkyRegion
 
+import logging
 import yaml
 
 from gammapysimulator.tools import logger, utils
@@ -43,16 +44,24 @@ class SimulationConfigurator:
         with open(ConfigurationFileName) as f:
             configuration = yaml.load(f, Loader = yaml.SafeLoader)
         
-        # Simulation Parameters
-        self.seed = int(configuration['Simulation']['RandomSeed'])
-        
-        self.simN = int(configuration['Simulation']['SimuNumber'])
-        
-        self.OutputDirectory = Path(utils.get_absolute_path(configuration['Simulation']['OutputDirectory'])).absolute()
-        self.OutputDirectory.mkdir(parents=True, exist_ok=True)
+        # Output Directory
+        OutputDirectoryPath = Path(utils.get_absolute_path(configuration['Simulation']['OutputDirectory'])).absolute()
         
         self.OutputID = str(configuration['Simulation']['OutputID'])
+        self.OutputDirectory = OutputDirectoryPath.joinpath(self.OutputID)
+        utils.clean_directory(self.OutputDirectory, self.log)
         
+        # Output: Add Log File
+        OutputLogFile = str(self.OutputDirectory.joinpath(f"{self.log.name}.log"))
+        fh = logging.FileHandler(OutputLogFile)
+        fh.setLevel(self.log.level)
+        fh.setFormatter(self.log.handlers[0].formatter)
+        self.log.addHandler(fh)
+        self.log.info(f"Log to {OutputLogFile}")
+            
+        # Simulation Parameters
+        self.seed = int(configuration['Simulation']['RandomSeed'])
+        self.simN = int(configuration['Simulation']['SimuNumber'])
         self.product = str(configuration['Simulation']['Product'])
         if self.product not in ["DL3", "DL4"]:
             raise ValueError(f"Only DL3 or DL4 allowed, not {self.product}")

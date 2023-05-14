@@ -8,6 +8,8 @@
 
 # Folders
 .vscode
+SIMULATIONS
+.artifacts
 
 #######################################################
 
