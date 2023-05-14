@@ -10,44 +10,11 @@ import pytest
 
 import numpy as np
 
-from astropy import units as u
-from astropy.coordinates import SkyCoord
-from astropy.time import Time
-from gammapy.data import Observation, Observations
-from gammapy.irf import load_cta_irfs
-
 from gammapysimulator.configure import configure
 from gammapysimulator.scheduler import CTAscheduler
 
 #######################################################
 # Fixtures
-@pytest.fixture
-def mock_Observations(path_configuration_files):
-    """Define Mock Observations"""
-    
-    ObservationsStart= np.linspace(-5,20,25,endpoint=False)
-    ObservationsStop = ObservationsStart+1.0
-    ObservationsStart= ObservationsStart.tolist()* u.s
-    ObservationsStop = ObservationsStop.tolist() * u.s
-    
-    pointing = SkyCoord(83.63, 22.01, frame="fk5", unit="deg")
-    irfs = load_cta_irfs(path_configuration_files['irf'])
-    timeRef = Time("2023-01-01T00:00:00")
-    
-    observations = Observations()
-    
-    for i, (tstart, tstop) in enumerate(zip(ObservationsStart, ObservationsStop)):
-        obs = Observation.create(pointing,
-                                 obs_id=i,
-                                 tstart=tstart,
-                                 tstop=tstop,
-                                 irfs=irfs,
-                                 reference_time=timeRef
-                                 )
-        observations.append(obs)
-        
-    return observations
-
 
 #######################################################
 # Test
@@ -86,16 +53,16 @@ class TestCTAScheduler:
         ObservationsStart, ObservationsStop = scheduler.DefineSchedule()
         
         # Assert size
-        assert ObservationsStart.size==25
-        assert ObservationsStop.size==25
+        assert ObservationsStart.size==4
+        assert ObservationsStop.size==4
         
         # Assert content
-        my_start = np.linspace(-5,20,25,endpoint=False)
+        my_start = np.linspace(-2,2,4,endpoint=False)
         my_stop = my_start+1.0
         assert not np.any(ObservationsStart.value-my_start)
         assert not np.any(ObservationsStop.value-my_stop)
         
-    def test_SetObservations(self, path_configuration_files, mock_Observations):
+    def test_SetObservations(self, path_configuration_files, Mock_Observations):
         """Test Setting Observations"""
         
         # Define scheduler
@@ -105,10 +72,10 @@ class TestCTAScheduler:
         scheduler.SetObservations()
         
         # Test Number of Observations
-        assert len(scheduler.observations)==len(mock_Observations)
+        assert len(scheduler.observations)==len(Mock_Observations)
         
         # Test Observations attributes
-        for sched_obs, mock_obs in zip(scheduler.observations, mock_Observations):
+        for sched_obs, mock_obs in zip(scheduler.observations, Mock_Observations):
             assert sched_obs.aeff == mock_obs.aeff
             assert sched_obs.available_hdus == mock_obs.available_hdus
             assert sched_obs.available_irfs == mock_obs.available_irfs
