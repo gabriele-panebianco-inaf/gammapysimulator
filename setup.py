@@ -18,10 +18,10 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
    requirements = [d.strip() for d in fh.readlines() if "#" not in d]
 
 # SCRIPTS
-#scriptsPath = "gammapysimulator/scripts/"
-#scripts = [scriptsPath+file for file in os.listdir(scriptsPath)]
-#for script in scripts:
-#     print(script)
+scriptsPath = "gammapysimulator/scripts/"
+scripts = [scriptsPath+file for file in os.listdir(scriptsPath)]
+for script in scripts:
+     print(script)
 
 # SETUP
 setup(
@@ -40,7 +40,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     ],
-    #scripts=scripts,
+    scripts=scripts,
     package_dir={'gammapysimulator': 'gammapysimulator'},
     include_package_data=True
 )
