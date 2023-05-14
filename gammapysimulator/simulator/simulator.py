@@ -9,11 +9,13 @@
 from gammapy.datasets import MapDataset, SpectrumDataset, Datasets, SpectrumDatasetOnOff, MapDatasetOnOff
 from gammapy.makers import MapDatasetMaker, SpectrumDatasetMaker, SafeMaskMaker
 from gammapy.modeling.models import Models, SkyModel
+from numpy.random import RandomState
 from tqdm import tqdm
 from time import time
 
-from gammapysimulator.configure.configure import SimulationConfigurator
+from gammapysimulator.configure import configure
 from gammapysimulator.scheduler import CTAscheduler
+from gammapysimulator.tools import export
 
 
 class Simulator:
@@ -32,7 +34,7 @@ class Simulator:
         """
         
         # Read Configuration file and Set Configurator
-        configurator = SimulationConfigurator()
+        configurator = configure.SimulationConfigurator()
         configurator.read(ConfigurationFileName)
         self.conf = configurator
         
@@ -133,12 +135,16 @@ class Simulator:
                                          )
             safe_mask_maker = SafeMaskMaker(methods = ["aeff-default"])
         
+        # Define Datasets collection
+        datasets = Datasets()
+        
+        # Set Random State
+        random_state = RandomState(self.conf.seed)
+        
         # Perform reduction and measure time
-        self.log.info(f"Perform Dataset Reduction...")
+        self.log.info(f"Perform a {self.conf.analysis} Simulation...")
         now = time()
         
-        datasets = Datasets()
-            
         for idx, obs in enumerate(tqdm(self.observations, desc="Reduction Loop")):
 
             # Set Name and run DL3->DL4 Reduction
@@ -149,20 +155,22 @@ class Simulator:
             dataset.models = self.models
 
             # Fake ON counts
-            dataset.fake(random_state=self.conf.seed)
+            dataset.fake(random_state=random_state)
             
             # Fake OFF counts realization
             if self.conf.analysis=="3D":
                 dataset_onoff = MapDatasetOnOff.from_map_dataset(dataset=dataset,
                                                                  acceptance=1,
-                                                                 acceptance_off=5
+                                                                 acceptance_off=5,
+                                                                 name = f"onoff-{idx}"
                                                                  )
             elif self.conf.analysis=="1D":
                 dataset_onoff = SpectrumDatasetOnOff.from_spectrum_dataset(dataset=dataset,
                                                                            acceptance=1,
-                                                                           acceptance_off=5
+                                                                           acceptance_off=5,
+                                                                           name = f"onoff-{idx}"
                                                                            )
-            dataset_onoff.fake(npred_background=dataset.npred_background())
+            dataset_onoff.fake(npred_background=dataset.npred_background(),random_state=random_state)
             
             # Add current dataset to the Datasets() object
             datasets.append(dataset_onoff)
@@ -171,3 +179,17 @@ class Simulator:
         
         # Return the simulated Datasets
         return datasets
+
+    def ExportResults(self, datasets):
+        """
+        Export simulation results.
+        
+        Parameters
+        ----------
+        datasets : gammapy.datasets.Datasets
+            Datasets containing simulated data.
+        """
+        exportresults = export.ExportSimulations(self.conf, datasets)
+        exportresults.WriteResults()
+        
+        return None
