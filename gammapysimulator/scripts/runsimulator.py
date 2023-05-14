@@ -13,7 +13,7 @@ import argparse
 
 from gammapysimulator.simulator import simulator
 
-if __name__ == '__main__':
+def Simulate():
     
     # Monitor imports
     Imports_Time = time()-start
@@ -32,3 +32,8 @@ if __name__ == '__main__':
     # Final Time
     sourcesimulator.log.info(f"Runtime Imports = {float(Imports_Time):.3f} s.")
     sourcesimulator.log.info(f"Total Runtime = {float(time()-start):.3f} s.")
+    
+    return None
+
+if __name__ == '__main__':
+    Simulate()
