@@ -13,7 +13,10 @@ import os
 import pathlib
 import shutil
 
+from gammapy.datasets import Datasets
+from gammapy.utils.table import table_from_row_data
 from matplotlib import use
+
 from gammapysimulator.configure.configure import SimulationConfigurator
 from gammapysimulator.tools import utils
 
@@ -65,10 +68,13 @@ class ExportSimulations:
         os.makedirs(self.conf.OutputDirectory.joinpath("datasets"))
         
         if self.conf.product=="DL4":
-            self.WriteDL4InfoTable()
-            self.WriteDL4InfoTable(cumulative=True)
-            self.PlotLightCurve()
-            self.WriteDatasets()
+            if self.conf.analysis=="1D":
+                self.WriteDL4InfoTable()
+                self.WriteDL4InfoTable(cumulative=True)
+                self.PlotLightCurve()
+                self.WriteDatasets()
+                self.WriteStacked()
+                self.PlotSpectrum()
         elif self.conf.product=="DL3":
             raise NotImplementedError
     
@@ -161,6 +167,85 @@ class ExportSimulations:
         
         # Save Plot
         figure_name = self.conf.OutputDirectory.joinpath(f"plots/counts.{self.plotformat}")
+        self.log.info(f"Write {figure_name}")
+        fig.savefig(figure_name)
+        return None
+    
+    def WriteStacked(self):
+        """
+        Write Stacked Dataset to get the simulated spectrum.
+        """
+        stacked = Datasets(self.datasets).stack_reduce(name="stacked")
+        stacked.models = self.datasets[0].models
+        
+        # Write FITS file
+        stacked_name = self.conf.OutputDirectory.joinpath(f"datasets/stacked.fits")
+        self.log.info(f"Write {stacked_name}")
+        stacked.write(stacked_name)
+        
+        # Write ECSV recap
+        stacked_dict = stacked.info_dict()
+        stacked_table = table_from_row_data(rows=[stacked_dict])
+        stacked_table['time_start'] = self.time_start[0]
+        stacked_table['time_stop' ] = self.time_stop[-1]
+        table_name = self.conf.OutputDirectory.joinpath(f"stacked.ecsv")
+        self.log.info(f"Write {table_name}")
+        stacked_table.write(table_name)
+        
+        return None
+    
+    def PlotSpectrum(self):
+        """
+        Plot Spectrum of the Stacked Dataset.
+        """
+        
+        stacked = Datasets(self.datasets).stack_reduce(name="stacked")
+        stacked.models = self.datasets[0].models
+
+        # Define Quantitites
+        counts = np.squeeze(stacked.counts.data)
+        counts_errors = np.sqrt(counts)
+        background = np.squeeze(stacked.background.data)
+        background_errors = np.sqrt(background)
+        excess = np.squeeze(stacked.excess.data)
+        excess_errors = np.sqrt(np.power(counts_errors,2)+np.power(background_errors,2) )
+        energy_center = stacked.geoms['geom'].axes['energy'].center.value
+        energy_errors = stacked.geoms['geom'].axes['energy'].bin_width.value
+        npred_counts = np.squeeze(stacked.npred().data)
+        npred_signal = np.squeeze(stacked.npred_signal().data)
+        npred_background = np.squeeze(stacked.npred_background().data)
+        
+        time_min = self.time_start[0].value
+        time_max = self.time_stop[-1].value
+        
+        # Make Plot
+        fig, ax = plt.subplots(1, figsize = (10, 5), constrained_layout=True)
+        
+        # Plot Simulated quantitites
+        ax.errorbar(energy_center, counts, xerr=energy_errors, yerr=counts_errors,
+                    fmt = "o", capsize=2, label = f"Counts")
+        ax.errorbar(energy_center, background, xerr=energy_errors, yerr=background_errors,
+                    fmt = "o", capsize=2, label = f"Background")
+        ax.errorbar(energy_center, excess, xerr=energy_errors, yerr=excess_errors,
+                    fmt = "o", capsize=2, label = f"Excess")
+        
+        # Plot theoretical quantities
+        ax.plot(energy_center, npred_counts, label="Npred")
+        ax.plot(energy_center, npred_signal, label="Npred Signal")
+        ax.plot(energy_center, npred_background, label="Npred Background")
+
+        ax.set_xlabel(f"Energy / {stacked.geoms['geom'].axes['energy'].unit}", fontsize = 'large')
+        ax.set_ylabel('Counts', fontsize = 'large')
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        
+        title=f"Counts energy distribution in [{time_min:2f}, {time_max:2f}] {u.s}. T0={self.conf.timeRef}."
+        ax.set_title(title, fontsize = 'large')
+        ax.grid()
+        ax.legend(bbox_to_anchor=(1.2, 1.0), loc="upper right")
+        
+        # Save Plot
+        figure_name = self.conf.OutputDirectory.joinpath(f"plots/spectrum.{self.plotformat}")
         self.log.info(f"Write {figure_name}")
         fig.savefig(figure_name)
         return None
