@@ -3,20 +3,20 @@ Simulation:
   SimuNumber: 2
   OutputDirectory : $GAMMAPYSIMULATOR/SIMULATIONS/
   OutputID: test
-  Product: DL3
-  Analysis: 3D
+  Product: DL4
+  Analysis: 1D
 Geometry:
   Time:
     Reference: 2023-01-01T00:00:00
     Unit : s
-    Start: -5.0
-    Stop : 20.0
+    Start: -2.0
+    Stop : 2.0
     Resolution: 1.0
   Space:
     Frame: fk5
     Unit: deg 
     PointingLon: 83.63
-    PointingLat: 22.01
+    PointingLat: 22.41
     FoVRadius: 5.0
     Resolution: 0.02
   Energy:
@@ -25,6 +25,10 @@ Geometry:
     RangeTrue: [0.1, 300]
     RecoBinPerDecade: 4
     TrueBinPerDecade: 5
+Target:
+  TargetLon: 83.63
+  TargetLat: 22.01
+  RegionRadius: 0.2
 IRF:
   Instrument: CTA
   FilePath: $GAMMAPYSIMULATOR/test/data/Prod5-North-20deg-AverageAz-4LSTs09MSTs.1800s-v0.1.fits
