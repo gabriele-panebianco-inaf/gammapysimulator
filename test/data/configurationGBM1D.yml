@@ -1,0 +1,39 @@
+Simulation:
+  RandomSeed: 7
+  SimuNumber: 2
+  OutputDirectory : $GAMMAPYSIMULATOR/SIMULATIONS/
+  OutputID: TestGBM1D
+  Product: DL4
+  Analysis: 1D
+Geometry:
+  Time:
+    Reference: 2016-05-30T16:01:12
+    Unit : s
+    Start: -5.0
+    Stop : 20.0
+    Resolution: 1.0
+  Energy:
+    Unit: keV
+    RangeReco: [10.0,  900]
+    RangeTrue: [ 5.0, 1000]
+    RecoBinPerDecade: 4
+    TrueBinPerDecade: 5
+  Space:
+    Frame: galactic
+    Unit: deg 
+    RegionRadius: 0.2
+Pointing:
+  PointingLon: 177.52
+  PointingLat: 40.0
+Target:
+  TargetLon: 177.52
+  TargetLat: 40.0
+IRF:
+  Instrument: GBM
+  Detector: n1
+  Pointlike: True
+  FilePath:
+    RSP : $GAMMAPYSIMULATOR/test/data/glg_cspec_n1_bn160530667_v00.rsp
+    BAK : $GAMMAPYSIMULATOR/test/data/glg_cspec_n1_bn160530667_v00_200ms_10_900_keV.bak
+Model:
+  FilePath: $GAMMAPYSIMULATOR/test/data/modelGRB.yml

@@ -1,0 +1,35 @@
+components:
+-   name: GRB230530B
+    type: SkyModel
+    spectral:
+        type: PowerLawSpectralModel
+        parameters:
+        -   name: index
+            value: 2.0
+            is_norm: false
+        -   name: amplitude
+            value: 1.0e-1
+            unit: cm-2 s-1 keV-1
+            is_norm: true
+        -   name: reference
+            value: 1.0
+            unit: keV
+            frozen: true
+            is_norm: false
+    spatial:
+        type: PointSpatialModel
+        frame: galactic
+        parameters:
+        -   name: lon_0
+            value: 177.52
+            unit: deg
+            is_norm: false
+            frozen: true
+        -   name: lat_0
+            value: 40.0
+            unit: deg
+            is_norm: false
+            frozen: true
+    temporal:
+        type: ConstantTemporalModel
+        parameters: []
