@@ -28,7 +28,7 @@ class TestCTAScheduler:
         
         # Prepare Configurator
         configurator = configure.SimulationConfigurator()
-        configurator.read(path_configuration_files['configuration'])
+        configurator.read(path_configuration_files['configurationCTA1D'])
         
         # Define Scheduler
         scheduler = CTAscheduler.CTAScheduler(configurator)
@@ -46,7 +46,7 @@ class TestCTAScheduler:
         
         # Define scheduler
         configurator = configure.SimulationConfigurator()
-        configurator.read(path_configuration_files['configuration'])
+        configurator.read(path_configuration_files['configurationCTA1D'])
         scheduler = CTAscheduler.CTAScheduler(configurator)
         
         # Create Schedule
@@ -67,7 +67,7 @@ class TestCTAScheduler:
         
         # Define scheduler
         configurator = configure.SimulationConfigurator()
-        configurator.read(path_configuration_files['configuration'])
+        configurator.read(path_configuration_files['configurationCTA1D'])
         scheduler = CTAscheduler.CTAScheduler(configurator)
         scheduler.SetObservations()
         

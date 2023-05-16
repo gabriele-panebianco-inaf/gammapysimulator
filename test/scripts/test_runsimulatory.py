@@ -24,6 +24,6 @@ class TestRunSimulator:
     def test_Simulate(self, path_configuration_files):
         """Test that the class is correctly instantiated."""
         
-        os.system(f"runsimulator.py -conf {path_configuration_files['configuration']} ")
+        os.system(f"runsimulator.py -conf {path_configuration_files['configurationCTA1D']} ")
         
         #TODO: assert products

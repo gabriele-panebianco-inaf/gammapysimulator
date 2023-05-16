@@ -13,6 +13,7 @@ import os
 import pathlib
 import shutil
 
+from astropy.table import Table
 from gammapy.datasets import Datasets
 from gammapy.utils.table import table_from_row_data
 from matplotlib import use
@@ -108,9 +109,9 @@ class ExportSimulations:
         
         # Write light curve table
         if cumulative:
-            table_name = self.conf.OutputDirectory.joinpath('datasets_cumulative.ecsv')
+            table_name = self.conf.OutputDirectory.joinpath('lightcurve_cumulative.ecsv')
         else:
-            table_name = self.conf.OutputDirectory.joinpath('datasets.ecsv')
+            table_name = self.conf.OutputDirectory.joinpath('lightcurve.ecsv')
         
         self.log.info(f"Write {table_name}")
         info_table.write(table_name)
@@ -166,7 +167,7 @@ class ExportSimulations:
         ax.legend(bbox_to_anchor=(1.2, 1.0), loc="upper right")
         
         # Save Plot
-        figure_name = self.conf.OutputDirectory.joinpath(f"plots/counts.{self.plotformat}")
+        figure_name = self.conf.OutputDirectory.joinpath(f"plots/lightcurve.{self.plotformat}")
         self.log.info(f"Write {figure_name}")
         fig.savefig(figure_name)
         return None
@@ -188,9 +189,34 @@ class ExportSimulations:
         stacked_table = table_from_row_data(rows=[stacked_dict])
         stacked_table['time_start'] = self.time_start[0]
         stacked_table['time_stop' ] = self.time_stop[-1]
-        table_name = self.conf.OutputDirectory.joinpath(f"stacked.ecsv")
+        table_name = self.conf.OutputDirectory.joinpath(f"stacked_counts.ecsv")
         self.log.info(f"Write {table_name}")
         stacked_table.write(table_name)
+        
+        # Write Table for spectrum
+        spectrum_table = Table()
+        spectrum_table['e_min'] = stacked.geoms['geom'].axes['energy'].edges_min
+        spectrum_table['e_max'] = stacked.geoms['geom'].axes['energy'].edges_max
+        spectrum_table['e_ref'] = stacked.geoms['geom'].axes['energy'].center
+        spectrum_table['counts']= np.squeeze(stacked.counts.data)
+        spectrum_table['counts_off']= np.squeeze(stacked.counts_off.data)
+        spectrum_table['background']= np.squeeze(stacked.background.data)
+        spectrum_table['excess']= np.squeeze(stacked.excess.data)
+        spectrum_table['alpha']= np.squeeze(stacked.alpha.data)
+        spectrum_table['acceptance']= np.squeeze(stacked.acceptance.data)
+        spectrum_table['acceptance_off']= np.squeeze(stacked.acceptance_off.data)
+        spectrum_table['npred_signal']=np.squeeze(stacked.npred_signal().data)
+        spectrum_table['npred_background']=np.squeeze(stacked.npred_background().data)
+        spectrum_table['npred']=np.squeeze(stacked.npred().data)
+        spectrum_table['npred_off']=np.squeeze(stacked.npred_off().data)
+        spectrum_table['stat_array']=np.squeeze(stacked.stat_array())
+        spectrum_table['sqrt_ts']=stacked._counts_statistic[stacked.mask_safe.data].sqrt_ts
+        spectrum_table['counts_rate']= spectrum_table['counts'] / stacked_dict['livetime']
+        spectrum_table['background_rate']= spectrum_table['background'] / stacked_dict['livetime']
+        spectrum_table['excess_rate']= spectrum_table['excess'] / stacked_dict['livetime']
+        table_name = self.conf.OutputDirectory.joinpath(f"stacked_spectrum.ecsv")
+        self.log.info(f"Write {table_name}")
+        spectrum_table.write(table_name)
         
         return None
     
@@ -245,7 +271,7 @@ class ExportSimulations:
         ax.legend(bbox_to_anchor=(1.2, 1.0), loc="upper right")
         
         # Save Plot
-        figure_name = self.conf.OutputDirectory.joinpath(f"plots/spectrum.{self.plotformat}")
+        figure_name = self.conf.OutputDirectory.joinpath(f"plots/stacked_spectrum.{self.plotformat}")
         self.log.info(f"Write {figure_name}")
         fig.savefig(figure_name)
         return None

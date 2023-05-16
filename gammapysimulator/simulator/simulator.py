@@ -81,8 +81,8 @@ class Simulator:
             Models of the Simulation.
         """
         # Read Models from a YAML file
-        self.log.info(f"Load Models from: {self.conf.modelfilename}")
-        models = Models.read(self.conf.modelfilename)
+        self.log.info(f"Load Models from: {self.conf.modelfilepath}")
+        models = Models.read(self.conf.modelfilepath)
         
         # Print
         self.log.info(models)

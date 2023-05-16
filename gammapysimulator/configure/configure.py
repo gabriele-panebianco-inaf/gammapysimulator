@@ -18,6 +18,10 @@ import yaml
 
 from gammapysimulator.tools import logger, utils
 
+AllowedProducts = ["DL3","DL4"]
+AllowedAnalysis = ["1D" ,"3D" ]
+AllowedInstrument = ["CTA", "Fermi-GBM"]
+
 class SimulationConfigurator:
     """
     Class that reads a YML file and defines the parameters needed for the simulation.
@@ -44,54 +48,137 @@ class SimulationConfigurator:
         with open(ConfigurationFileName) as f:
             configuration = yaml.load(f, Loader = yaml.SafeLoader)
         
-        # Output Directory
+        # Set Output Directory and log file
+        self.SetOutput(configuration)
+            
+        # Set General Paramenters of Simulation
+        self.SetSimulation(configuration)
+        
+        #TODO: Develop and Test more cases
+        if self.product=="DL3":
+            raise NotImplementedError
+        
+        # Set Model filepath
+        self.modelfilepath = Path(utils.get_absolute_path(configuration['Model']['FilePath'])).absolute()
+        if not self.modelfilepath.is_file():
+            raise FileNotFoundError(f"Model file not found: {self.modelfilepath}")
+        
+        # Set Instrument and IRFs
+        self.SetInstrument(configuration)
+        
+        # Set Time, Energy and Space Geometry
+        self.SetGeometry(configuration)
+        
+        return None
+    
+    def SetOutput(self, configuration : dict):
+        """
+        Set the Output Directory and log to file.
+        
+        Parameters
+        ----------
+        configuration : dict
+            Configuration dictionary.
+        """
+        
+        # Set Output Directory Name and Tag
         OutputDirectoryPath = Path(utils.get_absolute_path(configuration['Simulation']['OutputDirectory'])).absolute()
         
         self.OutputID = str(configuration['Simulation']['OutputID'])
         self.OutputDirectory = OutputDirectoryPath.joinpath(self.OutputID)
+        
+        # Output Directory Cleanup
         utils.clean_directory(self.OutputDirectory, self.log)
         
-        # Output: Add Log File
+        # Add Log File
         OutputLogFile = str(self.OutputDirectory.joinpath(f"{self.log.name}.log"))
         fh = logging.FileHandler(OutputLogFile)
         fh.setLevel(self.log.level)
         fh.setFormatter(self.log.handlers[0].formatter)
         self.log.addHandler(fh)
         self.log.info(f"Log to {OutputLogFile}")
-            
-        # Simulation Parameters
+        
+        return None
+    
+    def SetSimulation(self, configuration : dict):
+        """
+        Set general parameters for simulation.
+        
+        Parameters
+        ----------
+        configuration : dict
+            Configuration dictionary.
+        """
+        
+        # Set Seed
         self.seed = int(configuration['Simulation']['RandomSeed'])
+        
+        # Set Number of Simulations
         self.simN = int(configuration['Simulation']['SimuNumber'])
+        
+        # Set Product Type
         self.product = str(configuration['Simulation']['Product'])
-        if self.product not in ["DL3", "DL4"]:
-            raise ValueError(f"Only DL3 or DL4 allowed, not {self.product}")
+        if self.product not in AllowedProducts:
+            raise ValueError(f"Only {AllowedProducts} allowed, not {self.product}")
         
+        # Set Analysis Type
         self.analysis = str(configuration['Simulation']['Analysis'])
-        if self.analysis not in ["1D", "3D"]:
-            raise ValueError(f"Only 1D or 3D allowed, not {self.analysis}")
+        if self.analysis not in AllowedAnalysis:
+            raise ValueError(f"Only {AllowedAnalysis} allowed, not {self.analysis}")
         
-        # Model filename
-        self.modelfilename = Path(utils.get_absolute_path(configuration['Model']['FilePath'])).absolute()
-        if not self.modelfilename.is_file():
-            raise ValueError(f"Model file not found: {self.modelfilename}")
+        return None
+    
+    def SetInstrument(self, configuration : dict):
+        """
+        Set Instruemnt and IRFs parameters.
         
-        # IRF Parameters
+        Parameters
+        ----------
+        configuration : dict
+            Configuration dictionary.
+        """
+        
+        # Set Instrument Name
         self.instrument = str(configuration['IRF']['Instrument'])
-        if self.instrument not in ["CTA", "Fermi-GBM"]:
-            raise ValueError(f"Only CTA or Fermi-GBM allowed, not {self.instrument}")
+        if self.instrument not in AllowedInstrument:
+            raise ValueError(f"Only {AllowedInstrument} allowed, not {self.instrument}")
         
-        self.IRFfilename = Path(utils.get_absolute_path(configuration['IRF']['FilePath'])).absolute()
-        if not self.IRFfilename.is_file():
-            raise ValueError(f"IRF file not found: {self.IRFfilename}")
+        # Set Detector Name (Optional)
+        try:
+            self.detector = str(configuration['IRF']['Detector'])
+        except KeyError:
+            self.detector = self.instrument
         
-        # Geometry - Time Parameters
+        # Check IRF Type and analysis are compatible
+        self.irf_pointlike = bool(configuration['IRF']['Pointlike'])
+        
+        if self.irf_pointlike and (self.analysis=="3D"):
+            raise ValueError("Cannot perform 3D simulations with Point-like IRFs.")
+        
+        # Set IRFs File Path
+        self.IRFfilepath = Path(utils.get_absolute_path(configuration['IRF']['FilePath'])).absolute()
+        if not self.IRFfilepath.is_file():
+            raise FileNotFoundError(f"IRF file not found: {self.IRFfilepath}")
+        
+        return None
+    
+    def SetGeometry(self, configuration : dict):
+        """
+        Set Analysis Time, Space and Energy Geometry.
+        
+        Parameters
+        ----------
+        configuration : dict
+            Configuration dictionary.
+        """
+        # Time Parameters
         self.timeUnit = u.Unit(str(configuration['Geometry']['Time']['Unit']))
         self.timeStart= float(configuration['Geometry']['Time']['Start'])* self.timeUnit
         self.timeStop = float(configuration['Geometry']['Time']['Stop']) * self.timeUnit
         self.timeReso = float(configuration['Geometry']['Time']['Resolution'])* self.timeUnit
         self.timeRef  = Time(str(configuration['Geometry']['Time']['Reference']))
         
-        # Geometry - Energy Axes
+        # Energy Axes
         self.energyUnit = u.Unit(str(configuration['Geometry']['Energy']['Unit']))
         
         self.axis_energy_reco = MapAxis.from_energy_bounds(
@@ -110,35 +197,47 @@ class SimulationConfigurator:
             name='energy_true'
             )
         
-        # Geometry - Space Parameters
+        # Space Grid Parameters
         self.frame = str(configuration['Geometry']['Space']['Frame'])
         self.frameUnit = u.Unit(str(configuration['Geometry']['Space']['Unit']))
-        self.FoVRadius = float(configuration['Geometry']['Space']['FoVRadius']) * self.frameUnit
-        self.resolution= float(configuration['Geometry']['Space']['Resolution'])* self.frameUnit
         
-        self.pointing = SkyCoord(float(configuration['Geometry']['Space']['PointingLon']),
-                                 float(configuration['Geometry']['Space']['PointingLat']),
+        # Pointing coordinates
+        self.pointing = SkyCoord(float(configuration['Pointing']['PointingLon']),
+                                 float(configuration['Pointing']['PointingLat']),
                                  unit = self.frameUnit,
                                  frame= self.frame
                                  )
         
-        # Target parameters
+        # Target coordinates
         self.target = SkyCoord(float(configuration['Target']['TargetLon']),
                                float(configuration['Target']['TargetLat']),
                                unit = self.frameUnit,
                                frame= self.frame
                                )
-        self.RegionRadius = float(configuration['Target']['RegionRadius']) * self.frameUnit
         
-        # Full Geometry of the Analysis
+        # Geometry of the Analysis
         if self.analysis=="3D":
+            
+            # Center 3D Geometry on Pointing Coordinates
+            # Define Spatial Grid by its resolution and FoV width
+            
+            self.FoVRadius = float(configuration['Geometry']['Space']['FoVRadius']) * self.frameUnit
+            self.resolution= float(configuration['Geometry']['Space']['Resolution'])* self.frameUnit
+
             geometry = WcsGeom.create(skydir= self.pointing,
                                       binsz = self.resolution.to('deg').value,
                                       width = (self.FoVRadius, self.FoVRadius),
                                       frame = self.frame,
                                       axes  = [self.axis_energy_reco]
                                       )
+            
         elif self.analysis=="1D":
+            
+            # Center 3D Geometry on Target Coordinates
+            # Define Spatial Dimension by Aperture Photometry Region Size
+            
+            self.RegionRadius = float(configuration['Geometry']['Space']['RegionRadius']) * self.frameUnit
+            
             geometry = RegionGeom.create(CircleSkyRegion(self.target, self.RegionRadius),
                                          axes = [self.axis_energy_reco]
                                          )
