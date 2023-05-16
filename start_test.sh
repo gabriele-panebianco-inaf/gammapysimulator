@@ -33,6 +33,6 @@ pytest \
 coverage xml -o "$DIRECTORY_COVERAGE/coverage_report_xml/coverage_report.xml"
 coverage html -d "$DIRECTORY_COVERAGE/coverage_report_html"
 
-echo "Coverage report: $DIRECTORY_COVERAGE \n"
-echo "Test results: $DIRECTORY_JUNIT \n"
+echo "Coverage report: $DIRECTORY_COVERAGE"
+echo "Test results: $DIRECTORY_JUNIT"
 
