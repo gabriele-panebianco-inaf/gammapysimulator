@@ -30,8 +30,8 @@ class CTAScheduler:
         self.log = configurator.log
         
         # Load IRFs
-        self.log.info(f"Load CTA IRFs from file: {self.conf.IRFfilename}")      
-        self.irfs = load_cta_irfs(self.conf.IRFfilename)
+        self.log.info(f"Load CTA IRFs from file: {self.conf.IRFfilepath}")      
+        self.irfs = load_cta_irfs(self.conf.IRFfilepath)
 
 
 

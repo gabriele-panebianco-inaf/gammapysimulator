@@ -29,9 +29,10 @@ def path_configuration_files(path_repository):
     """
     
     path_data = path_repository.joinpath("test/data")
-    files={'configuration':str(path_data.joinpath("configuration.yml")),
-           'model':str(path_data.joinpath("model.yml")),
-           'irf':str(path_data.joinpath('Prod5-North-20deg-AverageAz-4LSTs09MSTs.1800s-v0.1.fits'))
+    files={'configurationCTA1D':str(path_data.joinpath("configurationCTA1D.yml")),
+           'configurationCTA3D':str(path_data.joinpath("configurationCTA3D.yml")),
+           'modelCrab':str(path_data.joinpath("modelCrab.yml")),
+           'irfCTA':str(path_data.joinpath('Prod5-North-20deg-AverageAz-4LSTs09MSTs.1800s-v0.1.fits'))
            }
     return files
 
@@ -44,8 +45,8 @@ def Mock_Observations(path_configuration_files):
     ObservationsStart= ObservationsStart.tolist()* u.h
     ObservationsStop = ObservationsStop.tolist() * u.h
     
-    pointing = SkyCoord(83.63, 22.41, frame="fk5", unit="deg")
-    irfs = load_cta_irfs(path_configuration_files['irf'])
+    pointing = SkyCoord(83.63, 22.41, frame="icrs", unit="deg")
+    irfs = load_cta_irfs(path_configuration_files['irfCTA'])
     timeRef = Time("2023-01-01T00:00:00")
     
     observations = Observations()

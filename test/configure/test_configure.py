@@ -6,6 +6,7 @@
 #
 #######################################################
 
+import os
 import pytest
 
 from astropy import units as u
@@ -37,51 +38,131 @@ class TestSimulationConfigurator:
         
         # Assert Class
         assert isinstance(configurator, SimulationConfigurator)
-        assert isinstance(configurator.log, SimulatorLogger)
+        #assert isinstance(configurator.log, SimulatorLogger)
 
-    def test_init(self, path_repository, path_configuration_files):
-        """Test that a YAML configuration file is read"""
+    def test_initCTA1D(self, path_repository, path_configuration_files):
+        """
+        Test that a YAML configuration file is read.
+        Use CTA 1D configuration.       
+        """
         
         # Instantiate Configurator
         configurator = SimulationConfigurator()        
         # Read Configuration file
-        configurator.read(path_configuration_files['configuration'])
+        configurator.read(path_configuration_files['configurationCTA1D'])
+        
+        # Assert log file exists
+        assert os.path.isfile(path_repository.joinpath("SIMULATIONS/TestCTA1D/simulator.log"))
         
         # Assert attributes value
+        
+        # Simulation
         assert configurator.seed == 7
         assert configurator.simN == 2
-        assert configurator.OutputDirectory == path_repository.joinpath("SIMULATIONS/test/")
-        assert configurator.OutputID == "test"
+        assert configurator.OutputDirectory == path_repository.joinpath("SIMULATIONS/TestCTA1D")
+        assert configurator.OutputID == "TestCTA1D"
         assert configurator.product == "DL4"
         assert configurator.analysis == "1D"
-        assert configurator.modelfilename == Path(path_configuration_files['model'])
+        
+        # Model
+        assert configurator.modelfilepath == Path(path_configuration_files['modelCrab'])
+        
+        # IRF
         assert configurator.instrument == "CTA"
-        assert configurator.IRFfilename== Path(path_configuration_files['irf'])
+        assert configurator.detector == "North-4LSTs-09MSTs"
+        assert configurator.irf_pointlike == False
+        assert configurator.IRFfilepath== Path(path_configuration_files['irfCTA'])
+        
+        # Target and Pointing
+        assert configurator.pointing == SkyCoord(83.63, 22.41, frame="icrs", unit="deg")
+        assert configurator.target   == SkyCoord(83.63, 22.01, frame="icrs", unit="deg")
+        
+        # Geometry - Time
         assert configurator.timeUnit == u.h
         assert configurator.timeStart.value== pytest.approx(0.0, 1E-2)
         assert configurator.timeStop.value == pytest.approx(4.0, 1E-2)
         assert configurator.timeReso.value == pytest.approx(1.0, 1E-2)
         assert configurator.timeRef  == Time("2023-01-01T00:00:00")
+        
+        # Geometry - Energy
         assert configurator.energyUnit == u.TeV
         assert configurator.axis_energy_reco == MapAxis.from_energy_bounds("0.3 TeV", "100 TeV", 4, per_decade=True,name='energy')
         assert configurator.axis_energy_true == MapAxis.from_energy_bounds("0.1 TeV", "300 TeV", 5, per_decade=True,name='energy_true')
-        assert configurator.frame =="fk5"
+        
+        # Geometry - Space
+        assert configurator.frame =="icrs"
         assert configurator.frameUnit == u.deg
-        assert configurator.FoVRadius.value == pytest.approx(5,1E-2)
-        assert configurator.resolution.value== pytest.approx(0.02,1E-2)
-        assert configurator.pointing == SkyCoord(83.63, 22.41, frame="fk5", unit="deg")
-        assert configurator.target   == SkyCoord(83.63, 22.01, frame="fk5", unit="deg")
         assert configurator.RegionRadius.value == pytest.approx(0.2,1E-2)
+        assert not hasattr(configurator, 'FoVRadius')
+        assert not hasattr(configurator, 'resolution')
+
         assert configurator.geometry == RegionGeom.create(CircleSkyRegion(configurator.target,
                                                                           configurator.RegionRadius
                                                                           ),
                                                           axes = [configurator.axis_energy_reco]
                                                           )
-        #assert configurator.geometry == WcsGeom.create(skydir= configurator.pointing,
-        #                                               binsz = 0.02,
-        #                                               width = (5*u.deg, 5*u.deg),
-        #                                               frame = "fk5",
-        #                                               axes  = [configurator.axis_energy_reco]
-        #                                               )
+        
+    def test_initCTA3D(self, path_repository, path_configuration_files):
+        """
+        Test that a YAML configuration file is read.
+        Use CTA 3D configuration.      
+        """
+        
+        # Instantiate Configurator
+        configurator = SimulationConfigurator()        
+        # Read Configuration file
+        configurator.read(path_configuration_files['configurationCTA3D'])
+        
+        # Assert log file exists
+        assert os.path.isfile(path_repository.joinpath("SIMULATIONS/TestCTA3D/simulator.log"))
+        
+        # Assert attributes value
+        
+        # Simulation
+        assert configurator.seed == 7
+        assert configurator.simN == 2
+        assert configurator.OutputDirectory == path_repository.joinpath("SIMULATIONS/TestCTA3D")
+        assert configurator.OutputID == "TestCTA3D"
+        assert configurator.product == "DL4"
+        assert configurator.analysis == "3D"
+        
+        # Model
+        assert configurator.modelfilepath == Path(path_configuration_files['modelCrab'])
+        
+        # IRF
+        assert configurator.instrument == "CTA"
+        assert configurator.detector == "North-4LSTs-09MSTs"
+        assert configurator.irf_pointlike == False
+        assert configurator.IRFfilepath== Path(path_configuration_files['irfCTA'])
+        
+        # Target and Pointing
+        assert configurator.pointing == SkyCoord(83.63, 22.41, frame="icrs", unit="deg")
+        assert configurator.target   == SkyCoord(83.63, 22.01, frame="icrs", unit="deg")
+        
+        # Geometry - Time
+        assert configurator.timeUnit == u.h
+        assert configurator.timeStart.value== pytest.approx(0.0, 1E-2)
+        assert configurator.timeStop.value == pytest.approx(4.0, 1E-2)
+        assert configurator.timeReso.value == pytest.approx(1.0, 1E-2)
+        assert configurator.timeRef  == Time("2023-01-01T00:00:00")
+        
+        # Geometry - Energy
+        assert configurator.energyUnit == u.TeV
+        assert configurator.axis_energy_reco == MapAxis.from_energy_bounds("0.3 TeV", "100 TeV", 4, per_decade=True,name='energy')
+        assert configurator.axis_energy_true == MapAxis.from_energy_bounds("0.1 TeV", "300 TeV", 5, per_decade=True,name='energy_true')
+        
+        # Geometry - Space
+        assert configurator.frame =="icrs"
+        assert configurator.frameUnit == u.deg
+        assert not hasattr(configurator, 'RegionRadius')
+        assert configurator.FoVRadius.value == pytest.approx(5.0,1E-2)
+        assert configurator.resolution.value == pytest.approx(0.02,1E-2)
+
+        assert configurator.geometry == WcsGeom.create(skydir= configurator.pointing,
+                                                       binsz = 0.02,
+                                                       width = (5*u.deg, 5*u.deg),
+                                                       frame = "icrs",
+                                                       axes  = [configurator.axis_energy_reco]
+                                                       )
         
         

@@ -29,7 +29,7 @@ class TestSimulator:
         """Test that the class is correctly instantiated."""
         
         # Instantiate Simulator
-        sourcesimulator = simulator.Simulator(path_configuration_files['configuration'])
+        sourcesimulator = simulator.Simulator(path_configuration_files['configurationCTA1D'])
         
         # Assert Class and attributes
         assert isinstance(sourcesimulator, simulator.Simulator)
@@ -42,7 +42,7 @@ class TestSimulator:
         """Test that Observations are correctly read."""
         
         # Instantiate Configurator
-        sourcesimulator = simulator.Simulator(path_configuration_files['configuration'])
+        sourcesimulator = simulator.Simulator(path_configuration_files['configurationCTA1D'])
         observations = sourcesimulator.SetObservations()
         
         # Assert PSF Containment
@@ -78,7 +78,7 @@ class TestSimulator:
         """Test that Datasets are correctly set."""
         
         # Instantiate Simulator
-        sourcesimulator = simulator.Simulator(path_configuration_files['configuration'])
+        sourcesimulator = simulator.Simulator(path_configuration_files['configurationCTA1D'])
         
         # Run Dataset Reduction
         datasets = sourcesimulator.SimulateCTA()

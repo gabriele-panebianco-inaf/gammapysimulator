@@ -1,0 +1,38 @@
+Simulation:
+  RandomSeed: 7
+  SimuNumber: 2
+  OutputDirectory : $GAMMAPYSIMULATOR/SIMULATIONS/
+  OutputID: TestCTA3D
+  Product: DL4
+  Analysis: 3D
+Geometry:
+  Time:
+    Reference: 2023-01-01T00:00:00
+    Unit : h
+    Start: 0.0
+    Stop : 4.0
+    Resolution: 1.0
+  Energy:
+    Unit: TeV
+    RangeReco: [0.3, 100]
+    RangeTrue: [0.1, 300]
+    RecoBinPerDecade: 4
+    TrueBinPerDecade: 5
+  Space:
+    Frame: icrs
+    Unit: deg 
+    FoVRadius: 5.0
+    Resolution: 0.02
+Pointing:
+  PointingLon: 83.63
+  PointingLat: 22.41
+Target:
+  TargetLon: 83.63
+  TargetLat: 22.01
+IRF:
+  Instrument: CTA
+  Detector: North-4LSTs-09MSTs
+  Pointlike: False
+  FilePath: $GAMMAPYSIMULATOR/test/data/Prod5-North-20deg-AverageAz-4LSTs09MSTs.1800s-v0.1.fits
+Model:
+  FilePath: $GAMMAPYSIMULATOR/test/data/modelCrab.yml
