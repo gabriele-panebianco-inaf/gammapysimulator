@@ -156,9 +156,21 @@ class SimulationConfigurator:
             raise ValueError("Cannot perform 3D simulations with Point-like IRFs.")
         
         # Set IRFs File Path
-        self.IRFfilepath = Path(utils.get_absolute_path(configuration['IRF']['FilePath'])).absolute()
-        if not self.IRFfilepath.is_file():
-            raise FileNotFoundError(f"IRF file not found: {self.IRFfilepath}")
+        try:
+            # Single IRFs File: FilePath is a string
+            self.IRFfilepath = Path(utils.get_absolute_path(configuration['IRF']['FilePath'])).absolute()
+            # Check for file existence
+            if not self.IRFfilepath.is_file():
+                raise FileNotFoundError(f"IRF file not found: {self.IRFfilepath}")
+            
+        except TypeError:
+            # Multiple IRFs Files (e.g. RMF, ARF, RSP, BAK): FilePath is a dict.
+            self.IRFfilepath = {}
+            for key in configuration['IRF']['FilePath'].keys():
+                self.IRFfilepath[key] = Path(utils.get_absolute_path(configuration['IRF']['FilePath'][key])).absolute()
+                # Check for file existence
+                if not self.IRFfilepath[key].is_file():
+                    raise FileNotFoundError(f"IRF file not found: {self.IRFfilepath}")            
         
         return None
     
