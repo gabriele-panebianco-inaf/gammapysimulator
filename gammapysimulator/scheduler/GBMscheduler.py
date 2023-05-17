@@ -6,9 +6,12 @@
 #
 #######################################################
 
-from gammapysimulator.scheduler.scheduler import Scheduler
+from gammapy.data import GTI
 
 import numpy as np
+
+from gammapysimulator.scheduler.scheduler import Scheduler
+
 
 class GBMScheduler(Scheduler):
     """
@@ -37,8 +40,10 @@ class GBMScheduler(Scheduler):
         GTIs = self._define_GTIs()
         
         # Load Background Spectrum
-        if "BAK" in self.conf.IRFfilepath.keys():
+        try:
             background=self._read_Background_from_BAK(self.conf.IRFfilepath['BAK'])
+        except KeyError:
+            self.log.warning("Key \'BAK\' not found: no background file selected.")
         
         # Load IRFs: Effectiva Area and Energy Dispersion Probability
         if "RSP" in self.conf.IRFfilepath.keys():
@@ -52,14 +57,25 @@ class GBMScheduler(Scheduler):
         empty = self._define_Empty_Dataset()
         
         # Define a collection of empty Datasets with IRFs and GTIs.
-        self.empties = self._Set_Empty_Datasets()
+        self.emptydatasets = self._Set_Empty_Datasets()
         
         return None
         
 
     def _define_GTIs(self):
+        """
+        Compute the Schedule and define the GTI objects for the simulations.
+        Each one represents a different time bin of the simulation.
+        
+        Return
+        ------
+        GTIs : list of gammapy.data.GTI
+            List of GTI objects.
+        """
         ObservationsStart, ObservationsStop = self.DefineSchedule()
-        raise NotImplementedError
+        GTIs = [GTI.create(start, stop, reference_time=self.conf.timeRef) for start, stop in zip(ObservationsStart, ObservationsStop)]
+        
+        return GTIs
     
     def _read_Background_from_BAK(self, filepath):
         raise NotImplementedError

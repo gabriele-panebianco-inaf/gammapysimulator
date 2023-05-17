@@ -64,6 +64,8 @@ class Simulator:
             observations = scheduler.observations
         elif self.conf.instrument=="Fermi-GBM":
             scheduler = GBMscheduler.GBMScheduler(self.conf)
+            scheduler.LoadIRFs()
+            #emptydatasets = scheduler.emptydatasets
         else:
             raise NotImplementedError
         
