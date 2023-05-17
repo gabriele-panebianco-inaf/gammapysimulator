@@ -193,7 +193,7 @@ class SimulationConfigurator:
         # Energy Axes
         self.energyUnit = u.Unit(str(configuration['Geometry']['Energy']['Unit']))
         
-        self.axis_energy_reco = MapAxis.from_energy_bounds(
+        self.AxisEnergyReco = MapAxis.from_energy_bounds(
             configuration['Geometry']['Energy']['RangeReco'][0] * self.energyUnit,
             configuration['Geometry']['Energy']['RangeReco'][1] * self.energyUnit,
             configuration['Geometry']['Energy']['RecoBinPerDecade'],
@@ -201,7 +201,7 @@ class SimulationConfigurator:
             name='energy'
             )
         
-        self.axis_energy_true = MapAxis.from_energy_bounds(
+        self.AxisEnergyTrue = MapAxis.from_energy_bounds(
             configuration['Geometry']['Energy']['RangeTrue'][0] * self.energyUnit,
             configuration['Geometry']['Energy']['RangeTrue'][1] * self.energyUnit,
             configuration['Geometry']['Energy']['TrueBinPerDecade'],
@@ -240,7 +240,7 @@ class SimulationConfigurator:
                                       binsz = self.resolution.to('deg').value,
                                       width = (self.FoVRadius, self.FoVRadius),
                                       frame = self.frame,
-                                      axes  = [self.axis_energy_reco]
+                                      axes  = [self.AxisEnergyReco]
                                       )
             
         elif self.analysis=="1D":
@@ -251,7 +251,7 @@ class SimulationConfigurator:
             self.RegionRadius = float(configuration['Geometry']['Space']['RegionRadius']) * self.frameUnit
             
             geometry = RegionGeom.create(CircleSkyRegion(self.target, self.RegionRadius),
-                                         axes = [self.axis_energy_reco]
+                                         axes = [self.AxisEnergyReco]
                                          )
         self.geometry = geometry
         

@@ -86,8 +86,8 @@ class TestSimulationConfigurator:
         
         # Geometry - Energy
         assert configurator.energyUnit == u.TeV
-        assert configurator.axis_energy_reco == MapAxis.from_energy_bounds("0.3 TeV", "100 TeV", 4, per_decade=True,name='energy')
-        assert configurator.axis_energy_true == MapAxis.from_energy_bounds("0.1 TeV", "300 TeV", 5, per_decade=True,name='energy_true')
+        assert configurator.AxisEnergyReco == MapAxis.from_energy_bounds("0.3 TeV", "100 TeV", 4, per_decade=True,name='energy')
+        assert configurator.AxisEnergyTrue == MapAxis.from_energy_bounds("0.1 TeV", "300 TeV", 5, per_decade=True,name='energy_true')
         
         # Geometry - Space
         assert configurator.frame =="icrs"
@@ -99,7 +99,7 @@ class TestSimulationConfigurator:
         assert configurator.geometry == RegionGeom.create(CircleSkyRegion(configurator.target,
                                                                           configurator.RegionRadius
                                                                           ),
-                                                          axes = [configurator.axis_energy_reco]
+                                                          axes = [configurator.AxisEnergyReco]
                                                           )
         
     def test_initCTA3D(self, path_repository, path_configuration_files):
@@ -148,8 +148,8 @@ class TestSimulationConfigurator:
         
         # Geometry - Energy
         assert configurator.energyUnit == u.TeV
-        assert configurator.axis_energy_reco == MapAxis.from_energy_bounds("0.3 TeV", "100 TeV", 4, per_decade=True,name='energy')
-        assert configurator.axis_energy_true == MapAxis.from_energy_bounds("0.1 TeV", "300 TeV", 5, per_decade=True,name='energy_true')
+        assert configurator.AxisEnergyReco == MapAxis.from_energy_bounds("0.3 TeV", "100 TeV", 4, per_decade=True,name='energy')
+        assert configurator.AxisEnergyTrue == MapAxis.from_energy_bounds("0.1 TeV", "300 TeV", 5, per_decade=True,name='energy_true')
         
         # Geometry - Space
         assert configurator.frame =="icrs"
@@ -162,7 +162,7 @@ class TestSimulationConfigurator:
                                                        binsz = 0.02,
                                                        width = (5*u.deg, 5*u.deg),
                                                        frame = "icrs",
-                                                       axes  = [configurator.axis_energy_reco]
+                                                       axes  = [configurator.AxisEnergyReco]
                                                        )
         
         
