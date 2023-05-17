@@ -14,7 +14,7 @@ from tqdm import tqdm
 from time import time
 
 from gammapysimulator.configure import configure
-from gammapysimulator.scheduler import CTAscheduler
+from gammapysimulator.scheduler import CTAscheduler, GBMscheduler
 from gammapysimulator.tools import export
 
 
@@ -62,6 +62,8 @@ class Simulator:
             scheduler = CTAscheduler.CTAScheduler(self.conf)
             scheduler.SetObservations()
             observations = scheduler.observations
+        elif self.conf.instrument=="Fermi-GBM":
+            scheduler = GBMscheduler.GBMScheduler(self.conf)
         else:
             raise NotImplementedError
         
