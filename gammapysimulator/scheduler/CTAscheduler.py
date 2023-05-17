@@ -39,6 +39,7 @@ class CTAScheduler(Scheduler):
         # Load IRFs
         self.log.info(f"Load CTA IRFs from file: {self.conf.IRFfilepath}")      
         self.irfs = load_cta_irfs(self.conf.IRFfilepath)
+        self.exporter.PlotCTAIRFs(self.irfs)
 
 
     def SetObservations(self):

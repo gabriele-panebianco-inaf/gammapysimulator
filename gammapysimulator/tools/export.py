@@ -17,6 +17,7 @@ from astropy.table import Table
 from gammapy.datasets import Datasets
 from gammapy.utils.table import table_from_row_data
 from matplotlib import use
+from matplotlib.colors import LogNorm, PowerNorm
 
 from gammapysimulator.configure.configure import SimulationConfigurator
 from gammapysimulator.tools import utils
@@ -284,6 +285,18 @@ class ExportSimulations:
         return None
     
     
+    def PlotCTAIRFs(self, irfs):
+        """
+        Plot and save the CTA IRFs.
+        
+        Parameters
+        ----------
+        irfs : dict
+            Dictionary with CTA IRFs.
+        """
+        
+        return None
+    
     def PlotStep(self, functions, labels):
         """
         Plot functions as step histograms.
@@ -315,4 +328,95 @@ class ExportSimulations:
         figure_name = self.conf.OutputDirectory.joinpath(f"{labels['figurename']}.{self.plotformat}")
         self.log.info(f"Write {figure_name}")
         fig.savefig(figure_name)
+        return None
+    
+    def PlotDRM(self,
+                MapDRM,
+                stretch='linear',
+                cmap='plasma',
+                extracolor='white',
+                filename='DRM'
+                ):
+        """
+        Plot the DRM read from file.
+        
+        Parameters
+        ----------
+        MapDRM : gammapy.maps.RegionNDMap
+            Map containing the Detector Response Matrix and its geometry.
+        stretch : str or float
+            Normalization of the Colorbar.
+        cmap :  str
+            Colormap name of `matplotlib.colorbar.Colorbar`
+        extracolor : str
+            Color for secondary graphical elements.
+        filename : str
+            File name for the plot.
+        """
+        
+        # Prepare Grid
+        X, Y = np.meshgrid(MapDRM.geom.axes['energy_true'].center.value,
+                           MapDRM.geom.axes['energy'].center.value
+                           )
+
+        # Copy Data with Masking
+        DRM = np.squeeze(MapDRM.data)
+        Z = np.ma.masked_where(DRM.T <= 0, DRM.T)
+        
+        # Define Color Normalization
+        if stretch == "log":
+            norm = LogNorm()
+            
+            # Define Countour Levels
+            levs = np.linspace(np.floor(np.log10(Z.min())),
+                               np.ceil( np.log10(Z.max())),
+                               num = 50
+                              )
+            levs = np.power(10, levs)
+        
+        elif stretch in ['linear', 'sqrt'] or isinstance(stretch, float):
+            
+            if stretch=="linear":
+                gamma=1.0
+            elif stretch=="sqrt":
+                gamma=0.5
+            else:
+                gamma=stretch
+            norm = PowerNorm(gamma=gamma)
+            
+            # Define Countour Levels
+            levs = np.linspace(np.floor(np.power(Z.min(),gamma)),
+                               np.ceil( np.power(Z.max(),gamma)),
+                               num = 50
+                              )
+            levs = np.power(levs, 1.0/gamma)
+        else:
+            raise NotImplementedError(f"stretch={stretch} not allowed. Only float or string in[\'linear\', \'sqrt\', \'log\'] are allowed.") 
+
+
+        # Plot
+        fig, ax = plt.subplots(1, figsize=(9,5))
+
+        # Plot Data
+        cs = ax.contourf(X, Y, Z, levs, norm = norm, cmap = cmap)
+        _  = ax.contour( X, Y, Z, levs, norm = norm, colors=extracolor, alpha=0.05)
+        cbar = fig.colorbar(cs, ax=ax, location='right', shrink=0.9)
+        
+        # Graphics
+        ax.set_facecolor(cs.cmap(0))
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.grid(color=extracolor, ls='dotted')
+        cbar.set_label(f"Effective Area Redistribution / {MapDRM.unit}", fontsize = 'large', rotation=90)
+        ax.set_xlabel(f"True Energy [{MapDRM.geom.axes['energy_true'].unit}]", fontsize = 'large')
+        ax.set_ylabel(f"Reco Energy [{MapDRM.geom.axes['energy'].unit}]", fontsize = 'large')
+        ax.set_title(f"Detector Response Matrix {self.conf.instrument} {self.conf.detector}",
+                     fontsize = 'large'
+                     )
+
+        # Save Plot
+        figure_name = self.conf.OutputDirectory.joinpath(f"irfs/{filename}.{self.plotformat}")
+        self.log.info(f"Write {figure_name}")
+        fig.savefig(figure_name, facecolor = 'white')
+        
         return None

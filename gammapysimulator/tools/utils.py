@@ -81,7 +81,7 @@ def info_table(datasets, cumulative=False):
         return table_from_row_data(rows=rows)
     
 
-def InterpolateMap(OldValues, OldAxis, NewAxis, scale='lin', kind='linear'):
+def InterpolateFunction(OldValues, OldAxis, NewAxis, scale='lin', kind='linear'):
     """
     Interpolate differential quantities to find their values in a new axis.
     
@@ -124,6 +124,70 @@ def InterpolateMap(OldValues, OldAxis, NewAxis, scale='lin', kind='linear'):
     
     # Define new values
     ynew = f(xnew)
+    
+    # Add unit
+    NewValues = ynew * OldValues.unit
+    
+    return NewValues
+
+
+
+def InterpolateMap(OldValues, OldAxis1, OldAxis2, NewAxis1, NewAxis2, scale1='lin', scale2='lin', method='linear'):
+    """
+    Interpolate 2D differential quantities to find their values in a new axis.
+    
+    Parameters
+    ----------
+    OldValues : astropy.Quantity
+        Quantity evaluated at old axis.
+    OldAxis1, NewAxis1, OldAxis2, NewAxis2 : astropy.Quantity
+        Old and New axis where to evaluate the quantity values.
+    scale1, scale2 : str
+        Either 'lin' or 'log' to evaluate quantities at lin or log axes bins.
+    method : str
+        Argument passed to scipy.interpolate.RegularGridInterpolator
+        
+    Returns
+    -------
+    Newvalues : astropy.Quantity
+        Quantity evaluated at new axis.
+    """
+    
+    # Check New Bounds are within Old Bounds
+    if NewAxis1[0 ] < OldAxis1[0 ]:
+        raise ValueError(f"Requested function evaluation at {NewAxis1[0 ]}. The minimum is {OldAxis1[0 ]}.")
+    if NewAxis1[-1] > OldAxis1[-1]:
+        raise ValueError(f"Requested function evaluation at {NewAxis1[-1]}. The maximum is {OldAxis1[-1]}.")
+    if NewAxis2[0 ] < OldAxis2[0 ]:
+        raise ValueError(f"Requested function evaluation at {NewAxis2[0 ]}. The minimum is {OldAxis2[0 ]}.")
+    if NewAxis2[-1] > OldAxis2[-1]:
+        raise ValueError(f"Requested function evaluation at {NewAxis2[-1]}. The maximum is {OldAxis2[-1]}.")
+    
+    # Function evaluation at linear or logarithmic bins
+    if scale1=="lin":
+        xold1 = OldAxis1.value
+        xnew1 = NewAxis1.value
+    elif scale1=="log":
+        xold1 = np.log10(OldAxis1.value)
+        xnew1 = np.log10(NewAxis1.value)
+    else:
+        raise ValueError("Scale must be either lin or log.")
+    if scale2=="lin":
+        xold2 = OldAxis2.value
+        xnew2 = NewAxis2.value
+    elif scale2=="log":
+        xold2 = np.log10(OldAxis2.value)
+        xnew2 = np.log10(NewAxis2.value)
+    else:
+        raise ValueError("Scale must be either lin or log.")
+    yold = OldValues.value
+    
+    # Perform interpolation
+    interp = interpolate.RegularGridInterpolator((xold2, xold1), yold.T, method=method)
+    
+    # Evaluate new values
+    Y, X = np.meshgrid(xnew2, xnew1)
+    ynew = interp((Y,X))
     
     # Add unit
     NewValues = ynew * OldValues.unit

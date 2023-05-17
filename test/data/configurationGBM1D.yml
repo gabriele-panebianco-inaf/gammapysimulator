@@ -16,8 +16,8 @@ Geometry:
     Unit: keV
     RangeReco: [10.0,  900]
     RangeTrue: [ 5.0, 1000]
-    RecoBinPerDecade: 4
-    TrueBinPerDecade: 5
+    RecoBinPerDecade: 10
+    TrueBinPerDecade: 20
   Space:
     Frame: galactic
     Unit: deg 

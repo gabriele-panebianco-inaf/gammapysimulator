@@ -8,8 +8,10 @@
 
 from astropy import units as u
 from astropy.io import fits
-from astropy.table import Table, QTable
+from astropy.table import Table
 from gammapy.data import GTI
+from gammapy.datasets import SpectrumDataset, Datasets
+from gammapy.irf import EDispKernel, EDispKernelMap
 from gammapy.maps import RegionNDMap, MapAxis, RegionGeom
 from regions import CircleSkyRegion
 
@@ -59,17 +61,15 @@ class GBMScheduler(Scheduler):
         
         # Load IRFs: Effectiva Area and Energy Dispersion Probability
         if "RSP" in self.conf.IRFfilepath.keys():
-            exposure= self._read_Exposure_from_RSP(self.conf.IRFfilepath['RSP'])
-            edisp   = self._read_EDispPro_from_RSP(self.conf.IRFfilepath['RSP'])
+            DetectorResponseMatrix = self._read_DRM_from_RSP(self.conf.IRFfilepath['RSP'])
+            exposure= self.Compute_Exposure_from_DRM(DetectorResponseMatrix)
+            edisp   = self.Compute_EDispPro_from_DRM(DetectorResponseMatrix)
         else:
             exposure= self._read_Exposure_from_ARF(self.conf.IRFfilepath['ARF'])
             edisp   = self._read_EDispPro_from_RMF(self.conf.IRFfilepath['RMF'])
         
-        # Define an empty SpectrumDataset with IRFs
-        empty = self._define_Empty_Dataset()
-        
         # Define a collection of empty Datasets with IRFs and GTIs.
-        self.emptydatasets = self._Set_Empty_Datasets()
+        self.emptydatasets = self._Set_Empty_Datasets(GTIs, background, exposure, edisp)
         
         return None
         
@@ -100,8 +100,8 @@ class GBMScheduler(Scheduler):
         
         Return
         ------
-        background : gammapy.maps.RegionNDMap
-            Map containing the background spectrum.
+        CountsMap : gammapy.maps.RegionNDMap
+            Map containing the background counts spectrum.
         """
         # Check file existence
         self.log.info(f"Load BAK from file: {Filepath}")
@@ -117,7 +117,8 @@ class GBMScheduler(Scheduler):
         EnergyAxis = MapAxis.from_energy_edges(np.append(Ebounds['E_MIN'],
                                                          Ebounds['E_MAX'][-1]
                                                          ),
-                                               unit=self.conf.energyUnit
+                                               unit=self.conf.energyUnit,
+                                               name='energy'
                                                )
         Geometry = RegionGeom.create(CircleSkyRegion(self.conf.target, self.conf.RegionRadius),
                                      axes = [EnergyAxis]
@@ -136,7 +137,11 @@ class GBMScheduler(Scheduler):
         
         # This Map has a different precision wrt to the requested analysis binning,
         # we must interpolate rates.
-        RatesInterpolated = utils.InterpolateMap(Rates, EnergyAxis.center, self.conf.AxisEnergyReco.center, scale='log')
+        RatesInterpolated = utils.InterpolateFunction(Rates,
+                                                      EnergyAxis.center,
+                                                      self.conf.AxisEnergyReco.center,
+                                                      scale='log'
+                                                      )
         
         # Plot the old and new Rates
         self.exporter.PlotStep([(EnergyAxis.center, Rates, "Rates File"),
@@ -147,7 +152,7 @@ class GBMScheduler(Scheduler):
                               'xscale' : "log",
                               'yscale' : "log",
                               'title' : "Background Rates IRF",
-                              'figurename' : "irfs/ratesbak"
+                              'figurename' : "irfs/BackgroundRates_bak"
                               }
                              )
         
@@ -162,17 +167,210 @@ class GBMScheduler(Scheduler):
                               'xscale' : "log",
                               'yscale' : "log",
                               'title' : f"Background Counts IRF [{self.conf.timeReso}]",
-                              'figurename' : "irfs/countsbak"
+                              'figurename' : "irfs/BackgroundCountsSpectrum"
                               }
                              )     
         
         return CountsMap
     
-    def _read_Exposure_from_RSP(self, filepath):
-        raise NotImplementedError
     
-    def _read_EDispPro_from_RSP(self, filepath):
-        raise NotImplementedError
+    
+    def _read_DRM_from_RSP(self, Filepath):
+        """
+        Read Background Spectrum from a .bak file.
+        
+        Parameters
+        ----------
+        Filepath : pathlib.Path
+            Path of the background file.
+        
+        Return
+        ------
+        MapDRM : gammapy.maps.RegionNDMap
+            Map containing the Detector Response Matrix and its geometry.
+        """
+        # Check file existence
+        self.log.info(f"Load DRM from RSP file: {Filepath}")
+        if not os.path.isfile(Filepath):
+            raise FileNotFoundError(f"File Not Found: {Filepath}")    
+        
+        # Load requested HDUs
+        with fits.open(Filepath) as hdulist:
+            Ebounds = Table.read(hdulist['EBOUNDS' ])
+            SpecResp= Table.read(hdulist['SPECRESP MATRIX'])
+
+        # Create the Reco Energy Axis of the Matrix
+        EnergyAxisReco = MapAxis.from_energy_edges(np.append(Ebounds['E_MIN'],
+                                                             Ebounds['E_MAX'][-1]
+                                                             ),
+                                                   unit=Ebounds['E_MIN'].unit,
+                                                   name='energy'
+                                                   )
+        
+        # Create the True Energy Axis of the Matrix
+        EnergyAxisTrue = MapAxis.from_energy_edges(np.append(SpecResp['ENERG_LO'],
+                                                             SpecResp['ENERG_HI'][-1]
+                                                             ),
+                                                   unit=SpecResp['ENERG_LO'].unit,
+                                                   name='energy_true'
+                                                   )
+        
+        # Define the Geometry
+        Geometry = RegionGeom.create(CircleSkyRegion(self.conf.target, self.conf.RegionRadius),
+                                     axes = [EnergyAxisReco, EnergyAxisTrue]
+                                     )
+        
+        # Load the 2D Matrix
+        DRM = np.zeros([EnergyAxisTrue.nbin, EnergyAxisReco.nbin], dtype = np.float64)
+    
+        for i, rowSpecResp in enumerate(SpecResp):
+            if rowSpecResp["N_GRP"]:
+                m_start = 0
+                for k in range(rowSpecResp["N_GRP"]):
+                
+                    if np.isscalar(rowSpecResp["N_CHAN"]):
+                        f_chan = rowSpecResp["F_CHAN"]    -1 # Necessary only for GBM (?)
+                        n_chan = rowSpecResp["N_CHAN"]
+                    else:
+                        f_chan = rowSpecResp["F_CHAN"][k] -1 # Necessary only for GBM (?)
+                        n_chan = rowSpecResp["N_CHAN"][k]
+
+                    DRM[i, f_chan : f_chan+n_chan] = rowSpecResp["MATRIX"][m_start : m_start+n_chan]
+                    m_start += n_chan
+
+        # Add Unit to the DRM Matrix
+        DRMUnit = u.Unit(SpecResp['MATRIX'].unit)
+
+        # Combine Geometry and DRM Matrix into RegionNDMap
+        MapDRM = RegionNDMap.from_geom(Geometry, data=DRM, unit=DRMUnit, meta=SpecResp.meta)
+        
+        self.exporter.PlotDRM(MapDRM, stretch=0.3, filename="DetectorResponseMatrix_rsp")
+        
+        return MapDRM
+    
+    
+    def Compute_Exposure_from_DRM(self, MapDRM):
+        """
+        Compute an Exposure Map in the analysis Geometry from the MapDRM.
+        
+        Parameters
+        ----------
+        MapDRM : gammapy.maps.RegionNDMap
+            Map containing the Detector Response Matrix and its geometry.
+        
+        Return
+        ------
+        ExposureMap : gammapy.maps.RegionNDMap
+            Map containing the exposure.
+        """
+        # Compute Effective Area by summing DRM over reco energy axis
+        Aeff = np.sum(np.squeeze(MapDRM.data), axis=1)
+        Aeff = Aeff * MapDRM.unit
+        
+        # This Map has a different precision wrt to the requested analysis binning,
+        # we must interpolate rates.
+        AeffInterpolated = utils.InterpolateFunction(Aeff,
+                                                     MapDRM.geom.axes['energy_true'].center,
+                                                     self.conf.AxisEnergyTrue.center,
+                                                     scale='log'
+                                                     )
+        
+        # Plot the old and new Rates
+        self.exporter.PlotStep([(MapDRM.geom.axes['energy_true'].center, Aeff, "AEFF File"),
+                                (self.conf.AxisEnergyTrue.center, AeffInterpolated, "AEFF Interpolated")
+                                ],
+                               {'xlabel': f"Energy True / {self.conf.AxisEnergyTrue.unit}",
+                                'ylabel': f"Effective Area / ({AeffInterpolated.unit})",
+                                'xscale': "log",
+                                'yscale': "log",
+                                'title' : "Effective Area IRF",
+                                'figurename' : "irfs/EffectiveArea_rsp"
+                                }
+                               )
+        
+        # Get the Exposure by Multiplying Effective Area for the simulation integration time.
+        Exposure = AeffInterpolated * self.conf.timeReso
+        
+        # Define the Exposure Geometry
+        Geometry = RegionGeom.create(CircleSkyRegion(self.conf.target, self.conf.RegionRadius),
+                                     axes = [self.conf.AxisEnergyTrue]
+                                     )
+        
+        # Create the RegionNDMap with Counts and plot
+        ExposureMap = RegionNDMap.from_geom(Geometry,
+                                            data=Exposure.value,
+                                            unit=Exposure.unit,
+                                            meta=MapDRM.meta
+                                            )
+        self.exporter.PlotStep([(self.conf.AxisEnergyTrue.center, Exposure, "Exposure")],
+                               {'xlabel': f"Energy True / {self.conf.AxisEnergyTrue.unit}",
+                                'ylabel': f"Exposure / {Exposure.unit}",
+                                'xscale' : "log",
+                                'yscale' : "log",
+                                'title' : f"Exposure IRF [{self.conf.timeReso}]",
+                                'figurename' : "irfs/Exposure"
+                                }
+                               )
+        
+        return ExposureMap
+    
+    def Compute_EDispPro_from_DRM(self, MapDRM):
+        """
+        Compute Energy Dispersion Matrix from a Detector Response Matrix.
+        
+        Parameters
+        ----------
+        MapDRM : gammapy.maps.RegionNDMap
+            Map containing the Detector Response Matrix and its geometry.
+        
+        Return
+        ------
+        EnergyDispersionMap : `gammapy.irf.EDispKernelMap `
+            Energy Dispersion Matrix.
+        """
+        # MapDRM has a different resolution than the one requested for the simulation.
+        # Perform 2D interpolation of the Effective Area Matrix.
+        DRMInterpolated = utils.InterpolateMap(OldValues=np.squeeze(MapDRM.data)* MapDRM.unit,
+                                               OldAxis1=MapDRM.geom.axes['energy_true'].center,
+                                               OldAxis2=MapDRM.geom.axes['energy'].center,
+                                               NewAxis1=self.conf.AxisEnergyTrue.center,
+                                               NewAxis2=self.conf.AxisEnergyReco.center,
+                                               scale1='log',
+                                               scale2='log'
+                                               )
+        DRM = DRMInterpolated.value
+        DRMUnit = DRMInterpolated.unit
+
+        # Define full exposure map
+        # Compute Effective Area by summing DRM over reco energy axis
+        exposure = np.sum(DRM, axis=1) * DRMUnit * self.conf.timeReso
+        exposure_geometry = RegionGeom.create(CircleSkyRegion(self.conf.target, self.conf.RegionRadius),
+                                              axes = [self.conf.AxisEnergyTrue]
+                                              )
+        exposure_map = RegionNDMap.from_geom(exposure_geometry,
+                                             data=exposure.value,
+                                             unit=exposure.unit,
+                                             meta=MapDRM.meta
+                                             )
+        
+        # Normalize Detector Response Matrix to get a probability distribution
+        self.log.warning("Normalizing DRM columns to 1: assumption of no photons lost due to energy dispersion outside energy thresholds.")
+        ChannelNorm = np.sum(DRM, axis=1)
+        for i, norm in enumerate(ChannelNorm):
+            if norm > 0.0:
+                DRM[i] = DRM[i] / norm
+        
+        # EDispKernelMap from constructor
+        edisp_geometry = RegionGeom.create(CircleSkyRegion(self.conf.target, self.conf.RegionRadius),
+                                           axes = [self.conf.AxisEnergyReco, self.conf.AxisEnergyTrue]
+                                           )
+        edisp_map = RegionNDMap.from_geom(edisp_geometry, data=DRM, unit='', meta=MapDRM.meta)
+        EnergyDispersionMap = EDispKernelMap(edisp_kernel_map=edisp_map, exposure_map=exposure_map)
+        
+        # Plot the Energy Dispersion
+        self.exporter.PlotDRM(EnergyDispersionMap.edisp_map, stretch=0.3, cmap='viridis', filename="EnergyDispersionProbability_rsp")
+        
+        return EnergyDispersionMap
     
     def _read_Exposure_from_ARF(self, filepath):
         raise NotImplementedError
@@ -180,8 +378,39 @@ class GBMScheduler(Scheduler):
     def _read_EDispPro_from_RMF(self, filepath):
         raise NotImplementedError
     
-    def _define_Empty_Dataset(self):
-        raise NotImplementedError
-    
-    def _Set_Empty_Datasets(self):
-        raise NotImplementedError
+    def _Set_Empty_Datasets(self, GTIs, BackgroundMap, ExposureMap, EnergyDispersionMap):
+        """
+        Define a collection of SpectrumDatasets with different GTIs but same DL4 IRFs.
+        
+        Parameters
+        ----------
+        GTIs : list of gammapy.data.GTI
+            GTIs that define the time bin of each observation.
+        BackgroundMap : gammapy.maps.RegionNDMap
+            Map containing the background counts spectrum.
+        ExposureMap : gammapy.maps.RegionNDMap
+            Map containing the exposure.
+        EnergyDisperionMap : gammapy.maps.RegionNDMap
+            Map containing the energy dispersion probability.
+            
+        Returns
+        -------
+        datasets :  gammapy.datasets.Datasets()
+            A collection of SpectrumDataset with no counts.
+        """
+        datasets = Datasets()
+        EmptyCounts = CountsMap = RegionNDMap.from_geom(BackgroundMap.geom,
+                                                        data=0,
+                                                        unit='',
+                                                        )
+        for i, gti in enumerate(GTIs):
+            spectrumdataset = SpectrumDataset(counts=EmptyCounts,
+                                              background=BackgroundMap,
+                                              exposure=ExposureMap,
+                                              edisp=EnergyDispersionMap,
+                                              gti=gti,
+                                              name=f"empty-{i}"
+                                              )
+            datasets.append(spectrumdataset)
+        
+        return datasets
