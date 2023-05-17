@@ -12,6 +12,7 @@ import numpy as np
 
 from gammapysimulator.configure import configure
 from gammapysimulator.scheduler import CTAscheduler
+from gammapysimulator.tools import export
 
 #######################################################
 # Fixtures
@@ -26,12 +27,13 @@ class TestCTAScheduler:
     def test_init(self, path_configuration_files):
         """Test Scheduler initialization"""
         
-        # Prepare Configurator
+        # Prepare Configurator and Export
         configurator = configure.SimulationConfigurator()
         configurator.read(path_configuration_files['configurationCTA1D'])
+        exporter = export.ExportSimulations(configurator)
         
         # Define Scheduler
-        scheduler = CTAscheduler.CTAScheduler(configurator)
+        scheduler = CTAscheduler.CTAScheduler(configurator, exporter)
         
         # Assert Class
         assert isinstance(scheduler, CTAscheduler.CTAScheduler)
@@ -47,7 +49,8 @@ class TestCTAScheduler:
         # Define scheduler
         configurator = configure.SimulationConfigurator()
         configurator.read(path_configuration_files['configurationCTA1D'])
-        scheduler = CTAscheduler.CTAScheduler(configurator)
+        exporter = export.ExportSimulations(configurator)
+        scheduler = CTAscheduler.CTAScheduler(configurator, exporter)
         
         # Create Schedule
         ObservationsStart, ObservationsStop = scheduler.DefineSchedule()
@@ -68,7 +71,8 @@ class TestCTAScheduler:
         # Define scheduler
         configurator = configure.SimulationConfigurator()
         configurator.read(path_configuration_files['configurationCTA1D'])
-        scheduler = CTAscheduler.CTAScheduler(configurator)
+        exporter = export.ExportSimulations(configurator)
+        scheduler = CTAscheduler.CTAScheduler(configurator, exporter)
         scheduler.SetObservations()
         
         # Test Number of Observations

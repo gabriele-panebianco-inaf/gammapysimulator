@@ -42,7 +42,7 @@ class Simulator:
         self.log = self.conf.log
         
         # Set Export object
-        self.export = export.ExportSimulations(self.conf)
+        self.exporter = export.ExportSimulations(self.conf)
         
         # Set Observations
         self.observations = self.SetObservations()
@@ -62,11 +62,11 @@ class Simulator:
         """
         
         if self.conf.instrument=="CTA":
-            scheduler = CTAscheduler.CTAScheduler(self.conf, self.export)
+            scheduler = CTAscheduler.CTAScheduler(self.conf, self.exporter)
             scheduler.SetObservations()
             observations = scheduler.observations
         elif self.conf.instrument=="Fermi-GBM":
-            scheduler = GBMscheduler.GBMScheduler(self.conf, self.export)
+            scheduler = GBMscheduler.GBMScheduler(self.conf, self.exporter)
             scheduler.LoadIRFs()
             #emptydatasets = scheduler.emptydatasets
         else:

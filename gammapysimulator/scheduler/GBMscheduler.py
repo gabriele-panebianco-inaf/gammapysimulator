@@ -27,7 +27,7 @@ class GBMScheduler(Scheduler):
     Class that organises Observations and Datasets with Fermi GBM IRFs.
     """
     
-    def __init__(self, configurator : SimulationConfigurator, export : ExportSimulations) -> None:
+    def __init__(self, configurator : SimulationConfigurator, exporter : ExportSimulations) -> None:
         """
         Instantiate Scheduler by reading IRFs.
         
@@ -35,13 +35,13 @@ class GBMScheduler(Scheduler):
         ----------
         configurator : gammapysimulator.configure.configure.SimulationConfigurator
             Configurator object.
-        export : gammapysimulator.tools.export.ExportSimulations
+        exporter : gammapysimulator.tools.export.ExportSimulations
             Export object.
         """
         
         self.conf= configurator
         self.log = configurator.log
-        self.export = export
+        self.exporter = exporter
     
     def LoadIRFs(self):
         """
@@ -139,7 +139,7 @@ class GBMScheduler(Scheduler):
         RatesInterpolated = utils.InterpolateMap(Rates, EnergyAxis.center, self.conf.AxisEnergyReco.center, scale='log')
         
         # Plot the old and new Rates
-        self.export.PlotStep([(EnergyAxis.center, Rates, "Rates File"),
+        self.exporter.PlotStep([(EnergyAxis.center, Rates, "Rates File"),
                               (self.conf.AxisEnergyReco.center, RatesInterpolated, "Rates Interpolated")
                               ],
                              {'xlabel': f"Energy / {self.conf.AxisEnergyReco.unit}",
@@ -156,7 +156,7 @@ class GBMScheduler(Scheduler):
         
         # Create the RegionNDMap with Counts and plot
         CountsMap = RegionNDMap.from_geom(self.conf.geometry, data=Counts.value, unit=Counts.unit, meta=Spectrum.meta)
-        self.export.PlotStep([(self.conf.AxisEnergyReco.center, Counts, "Background")],
+        self.exporter.PlotStep([(self.conf.AxisEnergyReco.center, Counts, "Background")],
                              {'xlabel': f"Energy / {self.conf.AxisEnergyReco.unit}",
                               'ylabel': f"Counts",
                               'xscale' : "log",
