@@ -45,3 +45,14 @@ class Scheduler(ABC):
 
         return ObservationsStart, ObservationsStop
     
+    def getEmptyDatasets(self):
+        """
+        Return attribute emptydatasets that contains Datasets with GTI and Reduced IRFs.
+        """
+        return self.emptydatasets
+    
+    @abstractmethod
+    def ScheduleDatasets(self):
+        pass
+
+    

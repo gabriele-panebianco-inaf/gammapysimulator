@@ -45,10 +45,13 @@ class GBMScheduler(Scheduler):
         self.log = configurator.log
         self.exporter = exporter
     
-    def LoadIRFs(self):
+    def ScheduleDatasets(self):
         """
         Load IRFs compatible with XSPEC and create a SpectrumDataset with only IRFs.
         """
+        
+        # Set PSF Containment false
+        self.psf_containment = False
         
         # Load GTIs
         GTIs = self._define_GTIs()
@@ -69,7 +72,7 @@ class GBMScheduler(Scheduler):
             edisp   = self._read_EDispPro_from_RMF(self.conf.IRFfilepath['RMF'])
         
         # Define a collection of empty Datasets with IRFs and GTIs.
-        self.emptydatasets = self._Set_Empty_Datasets(GTIs, background, exposure, edisp)
+        self.emptydatasets = self.SetEmptyDatasets(GTIs, background, exposure, edisp)
         
         return None
         
@@ -378,7 +381,7 @@ class GBMScheduler(Scheduler):
     def _read_EDispPro_from_RMF(self, filepath):
         raise NotImplementedError
     
-    def _Set_Empty_Datasets(self, GTIs, BackgroundMap, ExposureMap, EnergyDispersionMap):
+    def SetEmptyDatasets(self, GTIs, BackgroundMap, ExposureMap, EnergyDispersionMap):
         """
         Define a collection of SpectrumDatasets with different GTIs but same DL4 IRFs.
         
