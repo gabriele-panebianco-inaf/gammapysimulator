@@ -30,7 +30,7 @@ def Simulate():
     simulations = sourcesimulator.RunSimulation()
     
     # Write and Plot Results
-    sourcesimulator.ExportResults(simulations)
+    sourcesimulator.export.WriteResults(simulations)
     
     # Final Time
     sourcesimulator.log.info(f"Runtime Imports = {float(Imports_Time):.3f} s.")

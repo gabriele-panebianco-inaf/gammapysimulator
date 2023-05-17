@@ -27,7 +27,7 @@ class ExportSimulations:
     Class that exports simualation results.
     """
     
-    def __init__(self, conf : SimulationConfigurator, datasets, backend='Agg', plotformat='png') -> None:
+    def __init__(self, conf : SimulationConfigurator, backend='Agg', plotformat='png') -> None:
         """
         Instantiate export class by setting configurator and datasets.
         
@@ -35,8 +35,6 @@ class ExportSimulations:
         ----------
         conf : gammapysimulator.configure.configure.SimulationConfigurator
             Configurator object.
-        datasets : gammapy.datasets.Datasets()
-            Simulated datasets.
         backend : str
             Backend to save plots.
         plotformat : str
@@ -45,6 +43,28 @@ class ExportSimulations:
         # Set attributes
         self.conf= conf
         self.log = conf.log
+        
+        # Make extra directories to store results
+        os.makedirs(self.conf.OutputDirectory.joinpath("plots"))
+        os.makedirs(self.conf.OutputDirectory.joinpath("datasets"))
+        os.makedirs(self.conf.OutputDirectory.joinpath("irfs"))
+        
+        # Set Graphical options
+        use(backend)
+        self.plotformat=plotformat
+        
+        return None
+    
+    def WriteResults(self, datasets):
+        """
+        Write Results according to requested analysis.
+        
+        Parameters
+        ----------
+        datasets : gammapy.datasets.Datasets()
+            Simulated datasets.
+        """
+        # Set Simuulated Datasets
         self.datasets = datasets
         
         # Add time start and stop arrays
@@ -53,20 +73,6 @@ class ExportSimulations:
         
         self.time_start = time_start.to('s')
         self.time_stop  = time_stop.to( 's')
-        
-        # Set Graphical options
-        use(backend)
-        self.plotformat=plotformat
-        
-        return None
-    
-    def WriteResults(self):
-        """
-        Write Results according to requested analysis.
-        """
-        # Make extra results directories
-        os.makedirs(self.conf.OutputDirectory.joinpath("plots"))
-        os.makedirs(self.conf.OutputDirectory.joinpath("datasets"))
         
         if self.conf.product=="DL4":
             if self.conf.analysis=="1D":
@@ -139,8 +145,8 @@ class ExportSimulations:
         excess_errors = np.sqrt(np.power(counts_errors,2)+np.power(background_errors,2) )
         time_center =(self.time_stop + self.time_start) / 2.0
         time_errors =(self.time_stop - self.time_start) / 2.0
-        e_min = self.conf.axis_energy_reco.bounds[0].value
-        e_max = self.conf.axis_energy_reco.bounds[1].value
+        e_min = self.conf.AxisEnergyReco.bounds[0].value
+        e_max = self.conf.AxisEnergyReco.bounds[1].value
         
         # Make Plot
         fig, ax = plt.subplots(1, figsize = (10, 5), constrained_layout=True)
@@ -260,6 +266,7 @@ class ExportSimulations:
         ax.plot(energy_center, npred_signal, label="Npred Signal")
         ax.plot(energy_center, npred_background, label="Npred Background")
 
+        # Graphics
         ax.set_xlabel(f"Energy / {stacked.geoms['geom'].axes['energy'].unit}", fontsize = 'large')
         ax.set_ylabel('Counts', fontsize = 'large')
         ax.set_xscale('log')
@@ -272,6 +279,40 @@ class ExportSimulations:
         
         # Save Plot
         figure_name = self.conf.OutputDirectory.joinpath(f"plots/stacked_spectrum.{self.plotformat}")
+        self.log.info(f"Write {figure_name}")
+        fig.savefig(figure_name)
+        return None
+    
+    
+    def PlotStep(self, functions, labels):
+        """
+        Plot functions as step histograms.
+        
+        Parameters
+        ----------
+        functions : list of (astropy.Quantity, astropy.Quantity, str)
+            First quantity is x centroid, second is y value, third is label.
+        labels : dict
+            Values are string, keys are xlabel, ylabel, xscale, yscale, title, figurename.
+        """
+        
+        # Make Plot
+        fig, ax = plt.subplots(1, figsize = (10, 5), constrained_layout=True)
+        
+        for function in functions:
+            ax.step(function[0], function[1], where='mid', label=function[2])
+        
+        # Graphics
+        ax.set_xlabel(labels['xlabel'], fontsize = 'large')
+        ax.set_ylabel(labels['ylabel'], fontsize = 'large')
+        ax.set_xscale(labels['xscale'])
+        ax.set_yscale(labels['yscale'])
+        ax.set_title( labels['title' ], fontsize = 'large')
+        ax.grid()
+        ax.legend()
+        
+        # Save Plot
+        figure_name = self.conf.OutputDirectory.joinpath(f"{labels['figurename']}.{self.plotformat}")
         self.log.info(f"Write {figure_name}")
         fig.savefig(figure_name)
         return None

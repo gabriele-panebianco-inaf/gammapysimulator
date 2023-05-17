@@ -8,7 +8,10 @@
 
 from gammapy.data import Observation, Observations
 from gammapy.irf import load_cta_irfs
+
+from gammapysimulator.configure.configure import SimulationConfigurator
 from gammapysimulator.scheduler.scheduler import Scheduler
+from gammapysimulator.tools.export import ExportSimulations
 
 import numpy as np
 
@@ -17,7 +20,7 @@ class CTAScheduler(Scheduler):
     Class that organises Observations and Datasets with CTA IRFs.
     """
     
-    def __init__(self, configurator) -> None:
+    def __init__(self, configurator : SimulationConfigurator, export : ExportSimulations) -> None:
         """
         Instantiate Scheduler by reading IRFs.
         
@@ -25,10 +28,13 @@ class CTAScheduler(Scheduler):
         ----------
         configurator : gammapysimulator.configure.configure.SimulationConfigurator
             Configurator object.
+        export : gammapysimulator.tools.export.ExportSimulations
+            Export object.
         """
         
         self.conf= configurator
         self.log = configurator.log
+        self.export = export
         
         # Load IRFs
         self.log.info(f"Load CTA IRFs from file: {self.conf.IRFfilepath}")      

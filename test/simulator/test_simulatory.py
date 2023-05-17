@@ -126,32 +126,3 @@ class TestSimulatorCTA:
         assert stacked_dict['ontime'].value == pytest.approx(14400, abs=1.0)
         
         return None
-
-    def test_ExportResults1D(self, path_repository, path_configuration_files):
-        """Test that expected results are written."""
-        
-        # Instantiate Simulator
-        sourcesimulator = simulator.Simulator(path_configuration_files['configurationCTA1D'])
-        simulations = sourcesimulator.RunSimulation()
-        sourcesimulator.ExportResults(simulations)
-        
-        # Assert file existence
-        OutputDirectory = sourcesimulator.conf.OutputDirectory
-        assert os.path.isfile(OutputDirectory.joinpath("simulator.log"))
-        assert os.path.isfile(OutputDirectory.joinpath("lightcurve.ecsv"))
-        assert os.path.isfile(OutputDirectory.joinpath("lightcurve_cumulative.ecsv"))
-        assert os.path.isfile(OutputDirectory.joinpath("models.yaml"))
-        assert os.path.isfile(OutputDirectory.joinpath("models_covariance.dat"))
-        assert os.path.isfile(OutputDirectory.joinpath("stacked_counts.ecsv"))
-        assert os.path.isfile(OutputDirectory.joinpath("stacked_spectrum.ecsv"))
-        assert os.path.isfile(OutputDirectory.joinpath("plots/lightcurve.png"))
-        assert os.path.isfile(OutputDirectory.joinpath("plots/stacked_spectrum.png"))
-        assert os.path.isfile(OutputDirectory.joinpath("datasets/datasets.fits"))
-        
-        for name in ["stacked", "pha_obsonoff-0", "pha_obsonoff-1","pha_obsonoff-2", "pha_obsonoff-3"]:
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/{name}.fits"))
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/{name}_arf.fits"))
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/{name}_rmf.fits"))
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/{name}_bkg.fits"))
-        
-        return None

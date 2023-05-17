@@ -41,6 +41,9 @@ class Simulator:
         # Set Log
         self.log = self.conf.log
         
+        # Set Export object
+        self.export = export.ExportSimulations(self.conf)
+        
         # Set Observations
         self.observations = self.SetObservations()
         
@@ -59,11 +62,11 @@ class Simulator:
         """
         
         if self.conf.instrument=="CTA":
-            scheduler = CTAscheduler.CTAScheduler(self.conf)
+            scheduler = CTAscheduler.CTAScheduler(self.conf, self.export)
             scheduler.SetObservations()
             observations = scheduler.observations
         elif self.conf.instrument=="Fermi-GBM":
-            scheduler = GBMscheduler.GBMScheduler(self.conf)
+            scheduler = GBMscheduler.GBMScheduler(self.conf, self.export)
             scheduler.LoadIRFs()
             #emptydatasets = scheduler.emptydatasets
         else:
@@ -121,7 +124,7 @@ class Simulator:
         
         if self.conf.analysis=="3D":
             empty = MapDataset.create(geom = self.conf.geometry,
-                                      energy_axis_true = self.conf.axis_energy_true,
+                                      energy_axis_true = self.conf.AxisEnergyTrue,
                                       name = "empty",
                                       )
             maker = MapDatasetMaker(selection = ['exposure', 'background', 'psf', 'edisp'])
@@ -131,7 +134,7 @@ class Simulator:
                                             )
         elif self.conf.analysis=="1D":
             empty = SpectrumDataset.create(geom = self.conf.geometry,
-                                           energy_axis_true = self.conf.axis_energy_true,
+                                           energy_axis_true = self.conf.AxisEnergyTrue,
                                            name = "empty"
                                            )
             maker = SpectrumDatasetMaker(selection = ["exposure", "background", "edisp"],
@@ -183,17 +186,3 @@ class Simulator:
         
         # Return the simulated Datasets
         return datasets
-
-    def ExportResults(self, datasets):
-        """
-        Export simulation results.
-        
-        Parameters
-        ----------
-        datasets : gammapy.datasets.Datasets
-            Datasets containing simulated data.
-        """
-        exportresults = export.ExportSimulations(self.conf, datasets)
-        exportresults.WriteResults()
-        
-        return None
