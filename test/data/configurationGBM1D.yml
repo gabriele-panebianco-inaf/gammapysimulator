@@ -29,7 +29,7 @@ Target:
   TargetLon: 177.52
   TargetLat: 40.0
 IRF:
-  Instrument: GBM
+  Instrument: Fermi-GBM
   Detector: n1
   Pointlike: True
   FilePath:
