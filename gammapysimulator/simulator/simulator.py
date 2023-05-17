@@ -58,8 +58,8 @@ class Simulator:
         
         Return
         ------
-        observations : gammapy.data.Observations
-            Observations containing temporal and IRFs information.
+        emptydatasets : gammapy.datasets.Datasets
+            Collection of Datasets containing temporal and IRFs information.
         """
         
         # Define the Scheduler for the requested instrument

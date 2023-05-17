@@ -38,44 +38,23 @@ class TestSimulatorCTA:
         assert isinstance(sourcesimulator, simulator.Simulator)
         assert isinstance(sourcesimulator.conf, configure.SimulationConfigurator)
         assert isinstance(sourcesimulator.models, Models)
-        assert isinstance(sourcesimulator.observations, Observations)
+        assert isinstance(sourcesimulator.emptydatasets, Datasets)
         assert sourcesimulator.psf_containment
         
-    def test_SetObservations(self, path_configuration_files, Mock_Observations):
-        """Test that Observations are correctly read."""
+    def test_SetDL4IRFs(self, path_configuration_files, Mock_Observations):
+        """Test that DL4 Datasets are correctly read."""
         
         # Instantiate Configurator
         sourcesimulator = simulator.Simulator(path_configuration_files['configurationCTA1D'])
-        observations = sourcesimulator.SetObservations()
+        emptydatasets = sourcesimulator.SetDL4IRFs()
         
         # Assert PSF Containment
         assert sourcesimulator.psf_containment
         
         # Test Number of Observations
-        assert len(sourcesimulator.observations)==len(Mock_Observations)
+        assert len(sourcesimulator.emptydatasets)==len(Mock_Observations)
         
-        # Test Observations attributes
-        for simu_obs, mock_obs in zip(sourcesimulator.observations, Mock_Observations):
-            assert simu_obs.aeff == mock_obs.aeff
-            assert simu_obs.available_hdus == mock_obs.available_hdus
-            assert simu_obs.available_irfs == mock_obs.available_irfs
-            assert simu_obs.bkg == mock_obs.bkg
-            assert simu_obs.edisp == mock_obs.edisp
-            assert simu_obs.muoneff == mock_obs.muoneff
-            assert simu_obs.obs_info == mock_obs.obs_info
-            assert simu_obs.observation_dead_time_fraction == mock_obs.observation_dead_time_fraction
-            assert simu_obs.observation_time_duration == mock_obs.observation_time_duration
-            assert simu_obs.pointing_radec == mock_obs.pointing_radec
-            assert simu_obs.psf == mock_obs.psf
-            assert simu_obs.rad_max == mock_obs.rad_max
-            assert simu_obs.tstart == mock_obs.tstart
-            assert simu_obs.tstop == mock_obs.tstop
-            assert simu_obs.gti.time_delta == mock_obs.gti.time_delta
-            assert simu_obs.gti.time_intervals == mock_obs.gti.time_intervals
-            assert simu_obs.gti.time_ref == mock_obs.gti.time_ref
-            assert simu_obs.gti.time_start == mock_obs.gti.time_start
-            assert simu_obs.gti.time_stop == mock_obs.gti.time_stop
-            assert simu_obs.gti.time_sum == mock_obs.gti.time_sum
+        # TODO: Test Datasets attributes
             
     def test_Simulate1D(self, path_configuration_files):
         """Test that Datasets are correctly set."""
@@ -84,12 +63,12 @@ class TestSimulatorCTA:
         sourcesimulator = simulator.Simulator(path_configuration_files['configurationCTA1D'])
         
         # Run Dataset Reduction
-        datasets = sourcesimulator.SimulateCTA()
+        datasets = sourcesimulator.RunSimulation()
         
         assert isinstance(datasets, Datasets)
         
-        # Test Number of Observations
-        assert len(sourcesimulator.observations)==4
+        # Test Number of Datasets
+        assert len(datasets)==4
         
         # Assert other info about datasets
         assert datasets.energy_axes_are_aligned

@@ -73,13 +73,13 @@ class TestCTAScheduler:
         configurator.read(path_configuration_files['configurationCTA1D'])
         exporter = export.ExportSimulations(configurator)
         scheduler = CTAscheduler.CTAScheduler(configurator, exporter)
-        scheduler.SetObservations()
+        observations = scheduler.SetObservations()
         
         # Test Number of Observations
-        assert len(scheduler.observations)==len(Mock_Observations)
+        assert len(observations)==len(Mock_Observations)
         
         # Test Observations attributes
-        for sched_obs, mock_obs in zip(scheduler.observations, Mock_Observations):
+        for sched_obs, mock_obs in zip(observations, Mock_Observations):
             assert sched_obs.aeff == mock_obs.aeff
             assert sched_obs.available_hdus == mock_obs.available_hdus
             assert sched_obs.available_irfs == mock_obs.available_irfs
