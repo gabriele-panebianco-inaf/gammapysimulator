@@ -305,6 +305,7 @@ class GBMScheduler(Scheduler):
                                             unit=Exposure.unit,
                                             meta=MapDRM.meta
                                             )
+        ExposureMap.meta['livetime'] = self.conf.timeReso
         self.exporter.PlotStep([(self.conf.AxisEnergyTrue.center, Exposure, "Exposure")],
                                {'xlabel': f"Energy True / {self.conf.AxisEnergyTrue.unit}",
                                 'ylabel': f"Exposure / {Exposure.unit}",
@@ -343,14 +344,17 @@ class GBMScheduler(Scheduler):
                                                )
         DRM = DRMInterpolated.value
         DRMUnit = DRMInterpolated.unit
+        
+        # Define Geometry with two energy axes
+        Geometry = RegionGeom.create(CircleSkyRegion(self.conf.target, self.conf.RegionRadius),
+                                     axes = [self.conf.AxisEnergyReco, self.conf.AxisEnergyTrue]
+                                     )
 
         # Define full exposure map
         # Compute Effective Area by summing DRM over reco energy axis
         exposure = np.sum(DRM, axis=1) * DRMUnit * self.conf.timeReso
-        exposure_geometry = RegionGeom.create(CircleSkyRegion(self.conf.target, self.conf.RegionRadius),
-                                              axes = [self.conf.AxisEnergyTrue]
-                                              )
-        exposure_map = RegionNDMap.from_geom(exposure_geometry,
+        
+        exposure_map = RegionNDMap.from_geom(Geometry.squash('energy'),
                                              data=exposure.value,
                                              unit=exposure.unit,
                                              meta=MapDRM.meta
@@ -364,10 +368,7 @@ class GBMScheduler(Scheduler):
                 DRM[i] = DRM[i] / norm
         
         # EDispKernelMap from constructor
-        edisp_geometry = RegionGeom.create(CircleSkyRegion(self.conf.target, self.conf.RegionRadius),
-                                           axes = [self.conf.AxisEnergyReco, self.conf.AxisEnergyTrue]
-                                           )
-        edisp_map = RegionNDMap.from_geom(edisp_geometry, data=DRM, unit='', meta=MapDRM.meta)
+        edisp_map = RegionNDMap.from_geom(Geometry, data=DRM, unit='', meta=MapDRM.meta)
         EnergyDispersionMap = EDispKernelMap(edisp_kernel_map=edisp_map, exposure_map=exposure_map)
         
         # Plot the Energy Dispersion
@@ -402,17 +403,21 @@ class GBMScheduler(Scheduler):
             A collection of SpectrumDataset with no counts.
         """
         datasets = Datasets()
-        EmptyCounts = CountsMap = RegionNDMap.from_geom(BackgroundMap.geom,
-                                                        data=0,
-                                                        unit='',
-                                                        )
+        EmptyCounts = RegionNDMap.from_geom(BackgroundMap.geom,
+                                            data=0,
+                                            unit='',
+                                            )
+        MaskSafe = RegionNDMap.from_geom(BackgroundMap.geom,
+                                         data=True,
+                                         )
         for i, gti in enumerate(GTIs):
             spectrumdataset = SpectrumDataset(counts=EmptyCounts,
                                               background=BackgroundMap,
                                               exposure=ExposureMap,
                                               edisp=EnergyDispersionMap,
                                               gti=gti,
-                                              name=f"empty-{i}"
+                                              name=f"empty-{i}",
+                                              mask_safe=MaskSafe
                                               )
             datasets.append(spectrumdataset)
         

@@ -122,7 +122,7 @@ class Simulator:
         EmptyDatasets = self.emptydatasets
         OnOffDatasets = Datasets()
         
-        for idx, dataset in enumerate(tqdm(EmptyDatasets, desc="Reduction Loop")):
+        for idx, dataset in enumerate(tqdm(EmptyDatasets, desc="Simulation Loop")):
 
             # Set the source model and compute the predicted excess counts.
             dataset.models = self.models
