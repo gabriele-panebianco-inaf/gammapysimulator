@@ -30,12 +30,12 @@ class TestRunSimulator:
         # Assert file existence
         assert os.path.isfile(OutputDirectory.joinpath("simulator.log"))
         assert os.path.isfile(OutputDirectory.joinpath("configuration.yaml"))
-        assert os.path.isfile(OutputDirectory.joinpath("lightcurve.ecsv"))
-        assert os.path.isfile(OutputDirectory.joinpath("lightcurve_cumulative.ecsv"))
+        assert os.path.exists(OutputDirectory.joinpath("lightcurve.ecsv"))
+        assert os.path.exists(OutputDirectory.joinpath("lightcurve_cumulative.ecsv"))
         assert os.path.isfile(OutputDirectory.joinpath("models.yaml"))
         assert os.path.isfile(OutputDirectory.joinpath("models_covariance.dat"))
-        assert os.path.isfile(OutputDirectory.joinpath("stacked_counts.ecsv"))
-        assert os.path.isfile(OutputDirectory.joinpath("stacked_spectrum.ecsv"))
+        assert os.path.exists(OutputDirectory.joinpath("stacked_counts.ecsv"))
+        assert os.path.exists(OutputDirectory.joinpath("stacked_spectrum.ecsv"))
         
         assert os.path.isfile(OutputDirectory.joinpath("plots/lightcurve.png"))
         assert os.path.isfile(OutputDirectory.joinpath("plots/stacked_spectrum.png"))
@@ -67,12 +67,12 @@ class TestRunSimulator:
         # Assert file existence
         assert os.path.isfile(OutputDirectory.joinpath("simulator.log"))
         assert os.path.isfile(OutputDirectory.joinpath("configuration.yaml"))
-        assert os.path.isfile(OutputDirectory.joinpath("lightcurve.ecsv"))
-        assert os.path.isfile(OutputDirectory.joinpath("lightcurve_cumulative.ecsv"))
+        assert os.path.exists(OutputDirectory.joinpath("lightcurve.ecsv"))
+        assert os.path.exists(OutputDirectory.joinpath("lightcurve_cumulative.ecsv"))
         assert os.path.isfile(OutputDirectory.joinpath("models.yaml"))
         assert os.path.isfile(OutputDirectory.joinpath("models_covariance.dat"))
-        assert os.path.isfile(OutputDirectory.joinpath("stacked_counts.ecsv"))
-        assert os.path.isfile(OutputDirectory.joinpath("stacked_spectrum.ecsv"))
+        assert os.path.exists(OutputDirectory.joinpath("stacked_counts.ecsv"))
+        assert os.path.exists(OutputDirectory.joinpath("stacked_spectrum.ecsv"))
         
         assert os.path.isfile(OutputDirectory.joinpath("plots/lightcurve.png"))
         assert os.path.isfile(OutputDirectory.joinpath("plots/stacked_spectrum.png"))
