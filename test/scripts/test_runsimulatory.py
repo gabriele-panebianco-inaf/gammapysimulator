@@ -22,31 +22,79 @@ class TestRunSimulator:
     """Class to test RunSimulator"""
     
     def test_SimulateCTA1D(self, path_repository, path_configuration_files):
-        """Test that the script produces the expected results for a CTA 1D Simulation."""
+        """Test that the script produces the expected files for a CTA 1D Simulation."""
         
         os.system(f"runsimulator.py -conf {path_configuration_files['configurationCTA1D']} ")
         OutputDirectory = path_repository.joinpath("SIMULATIONS/TestCTA1D")
         
         # Assert file existence
         assert os.path.isfile(OutputDirectory.joinpath("simulator.log"))
+        assert os.path.isfile(OutputDirectory.joinpath("configuration.yaml"))
         assert os.path.isfile(OutputDirectory.joinpath("lightcurve.ecsv"))
         assert os.path.isfile(OutputDirectory.joinpath("lightcurve_cumulative.ecsv"))
         assert os.path.isfile(OutputDirectory.joinpath("models.yaml"))
         assert os.path.isfile(OutputDirectory.joinpath("models_covariance.dat"))
         assert os.path.isfile(OutputDirectory.joinpath("stacked_counts.ecsv"))
         assert os.path.isfile(OutputDirectory.joinpath("stacked_spectrum.ecsv"))
+        
         assert os.path.isfile(OutputDirectory.joinpath("plots/lightcurve.png"))
         assert os.path.isfile(OutputDirectory.joinpath("plots/stacked_spectrum.png"))
+        
         assert os.path.isfile(OutputDirectory.joinpath("irfs/effectivearea.png"))
         #assert os.path.isfile(OutputDirectory.joinpath("irfs/background.png"))
         #assert os.path.isfile(OutputDirectory.joinpath("irfs/energydispersion.png"))
         #assert os.path.isfile(OutputDirectory.joinpath("irfs/psf.png"))
-        assert os.path.isfile(OutputDirectory.joinpath("datasets/datasets.fits"))
         
-        for name in ["stacked", "pha_obsonoff-0", "pha_obsonoff-1","pha_obsonoff-2", "pha_obsonoff-3"]:
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/{name}.fits"))
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/{name}_arf.fits"))
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/{name}_rmf.fits"))
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/{name}_bkg.fits"))
+        assert os.path.isfile(OutputDirectory.joinpath("datasets/datasets.fits"))
+        assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked.fits"))
+        assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_arf.fits"))
+        assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_rmf.fits"))
+        assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_bkg.fits"))
+        for i in range(4):
+            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}.fits"))
+            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_arf.fits"))
+            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_rmf.fits"))
+            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_bkg.fits"))
         
         return None
+    
+    def test_SimulateGBM1D(self, path_repository, path_configuration_files):
+        """Test that the script produces the expected files for a GBM 1D Simulation."""
+        
+        os.system(f"runsimulator.py -conf {path_configuration_files['configurationGBM1D']} ")
+        OutputDirectory = path_repository.joinpath("SIMULATIONS/TestGBM1D")
+        
+        # Assert file existence
+        assert os.path.isfile(OutputDirectory.joinpath("simulator.log"))
+        assert os.path.isfile(OutputDirectory.joinpath("configuration.yaml"))
+        assert os.path.isfile(OutputDirectory.joinpath("lightcurve.ecsv"))
+        assert os.path.isfile(OutputDirectory.joinpath("lightcurve_cumulative.ecsv"))
+        assert os.path.isfile(OutputDirectory.joinpath("models.yaml"))
+        assert os.path.isfile(OutputDirectory.joinpath("models_covariance.dat"))
+        assert os.path.isfile(OutputDirectory.joinpath("stacked_counts.ecsv"))
+        assert os.path.isfile(OutputDirectory.joinpath("stacked_spectrum.ecsv"))
+        
+        assert os.path.isfile(OutputDirectory.joinpath("plots/lightcurve.png"))
+        assert os.path.isfile(OutputDirectory.joinpath("plots/stacked_spectrum.png"))
+        
+        assert os.path.isfile(OutputDirectory.joinpath("irfs/BackgroundCountsSpectrum.png"))
+        assert os.path.isfile(OutputDirectory.joinpath("irfs/BackgroundRates_bak.png"))
+        assert os.path.isfile(OutputDirectory.joinpath("irfs/DetectorResponseMatrix_rsp.png"))
+        assert os.path.isfile(OutputDirectory.joinpath("irfs/EffectiveArea_rsp.png"))
+        assert os.path.isfile(OutputDirectory.joinpath("irfs/EnergyDispersionProbability_rsp.png"))
+        assert os.path.isfile(OutputDirectory.joinpath("irfs/Exposure.png"))
+        
+        assert os.path.isfile(OutputDirectory.joinpath("datasets/datasets.fits"))
+        assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked.fits"))
+        assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_arf.fits"))
+        assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_rmf.fits"))
+        assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_bkg.fits"))
+        for i in range(25):
+            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}.fits"))
+            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_arf.fits"))
+            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_rmf.fits"))
+            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_bkg.fits"))
+        
+        return None
+    
+    #TODO: Add test for CTA 3D

@@ -15,6 +15,7 @@ from regions import CircleSkyRegion
 
 import logging
 import yaml
+import shutil
 
 from gammapysimulator.tools import logger, utils
 
@@ -50,6 +51,7 @@ class SimulationConfigurator:
         
         # Set Output Directory and log file
         self.SetOutput(configuration)
+        shutil.copyfile(ConfigurationFileName, self.OutputDirectory.joinpath("configuration.yaml"))
             
         # Set General Paramenters of Simulation
         self.SetSimulation(configuration)
