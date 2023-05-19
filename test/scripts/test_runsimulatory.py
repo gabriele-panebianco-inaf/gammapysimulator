@@ -21,8 +21,8 @@ from gammapysimulator.scripts.runsimulator import Simulate
 class TestRunSimulator:
     """Class to test RunSimulator"""
     
-    def test_Simulate(self, path_repository, path_configuration_files):
-        """Test that the class is correctly instantiated."""
+    def test_SimulateCTA1D(self, path_repository, path_configuration_files):
+        """Test that the script produces the expected results for a CTA 1D Simulation."""
         
         os.system(f"runsimulator.py -conf {path_configuration_files['configurationCTA1D']} ")
         OutputDirectory = path_repository.joinpath("SIMULATIONS/TestCTA1D")
@@ -37,6 +37,10 @@ class TestRunSimulator:
         assert os.path.isfile(OutputDirectory.joinpath("stacked_spectrum.ecsv"))
         assert os.path.isfile(OutputDirectory.joinpath("plots/lightcurve.png"))
         assert os.path.isfile(OutputDirectory.joinpath("plots/stacked_spectrum.png"))
+        assert os.path.isfile(OutputDirectory.joinpath("irfs/effectivearea.png"))
+        #assert os.path.isfile(OutputDirectory.joinpath("irfs/background.png"))
+        #assert os.path.isfile(OutputDirectory.joinpath("irfs/energydispersion.png"))
+        #assert os.path.isfile(OutputDirectory.joinpath("irfs/psf.png"))
         assert os.path.isfile(OutputDirectory.joinpath("datasets/datasets.fits"))
         
         for name in ["stacked", "pha_obsonoff-0", "pha_obsonoff-1","pha_obsonoff-2", "pha_obsonoff-3"]:

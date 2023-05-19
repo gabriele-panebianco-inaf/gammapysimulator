@@ -13,6 +13,7 @@ import os
 import pathlib
 import shutil
 
+from astropy.coordinates import SkyCoord, Angle
 from astropy.table import Table
 from gammapy.datasets import Datasets
 from gammapy.utils.table import table_from_row_data
@@ -294,9 +295,88 @@ class ExportSimulations:
         irfs : dict
             Dictionary with CTA IRFs.
         """
+        try:
+            self.PlotCTAEffectiveArea(irfs['aeff'])
+        except KeyError as e:
+            self.log.warning(e)
+            
+        try:
+            self.PlotCTABackground(irfs['bkg'])
+        except KeyError as e:
+            self.log.warning(e)
         
+        try:
+            self.PlotCTAEnergyDispersion(irfs['edisp'])
+        except KeyError as e:
+            self.log.warning(e)
+            
+        try:
+            self.PlotCTAPSF(irfs['psf'])
+        except KeyError as e:
+            self.log.warning(e)
+            
         return None
     
+    def PlotCTAEffectiveArea(self, aeff):
+        """
+        Plot effective area.
+        
+        Parameters
+        ----------
+        aeff : gammapy.irf.EffectiveAreaTable2D
+            Effective Area.
+        """
+        fig, axs = plt.subplots(1,3, figsize=(24,8), constrained_layout=True)
+        aeff.plot_energy_dependence(ax=axs[0], offset=Angle([0,0.4,1,2,3]*u.deg), drawstyle='steps-mid')
+        aeff.plot(ax=axs[1], add_cbar=True)
+        aeff.plot_offset_dependence(ax=axs[2])
+        
+        axs[0].loglog()
+        
+        axs[0].grid()
+        axs[1].grid(color='white', ls='dotted')
+        axs[2].grid()
+        
+        figure_name = self.conf.OutputDirectory.joinpath(f"irfs/effectivearea.{self.plotformat}")
+        self.log.info(f"Write {figure_name}")
+        fig.savefig(figure_name)
+        return None
+    
+    def PlotCTABackground(self, bkg):
+        """
+        Plot Background.
+        
+        Parameters
+        ----------
+        bkg : gammapy.irf.Background2D or Background3D
+            Background.
+        """
+        return None
+    
+    def PlotCTAEnergyDispersion(self, edisp):
+        """
+        Plot Energy Dispersion.
+        
+        Parameters
+        ----------
+        edisp : gammapy.irf.
+            Energy Dispersion.
+        """
+        return None
+    
+    def PlotCTAPSF(self, psf):
+        """
+        Plot PSF.
+        
+        Parameters
+        ----------
+        psf : gammapy.irf.
+            PSF.
+        """
+        return None
+    
+    
+
     def PlotStep(self, functions, labels):
         """
         Plot functions as step histograms.
