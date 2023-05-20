@@ -54,19 +54,19 @@ class GBMScheduler(Scheduler):
         self.psf_containment = False
         
         # Load GTIs
-        GTIs = self._define_GTIs()
+        GTIs = self.DefineGTIs()
         
         # Load Background Spectrum
         if "BAK" in self.conf.IRFfilepath.keys():
-            background=self._read_Background_from_BAK(self.conf.IRFfilepath['BAK'])
+            background=self.ReadBackgroundFromBAK(self.conf.IRFfilepath['BAK'])
         else:
             self.log.warning("Key \'BAK\' not found: no background file selected.")
         
         # Load IRFs: Effectiva Area and Energy Dispersion Probability
         if "RSP" in self.conf.IRFfilepath.keys():
-            DetectorResponseMatrix = self._read_DRM_from_RSP(self.conf.IRFfilepath['RSP'])
-            exposure= self.Compute_Exposure_from_DRM(DetectorResponseMatrix)
-            edisp   = self.Compute_EDispPro_from_DRM(DetectorResponseMatrix)
+            DetectorResponseMatrix = self.ReadDRMfromRSP(self.conf.IRFfilepath['RSP'])
+            exposure= self.ComputeExposureFromDRM(DetectorResponseMatrix)
+            edisp   = self.ComputeEDispProFromDRM(DetectorResponseMatrix)
         else:
             exposure= self._read_Exposure_from_ARF(self.conf.IRFfilepath['ARF'])
             edisp   = self._read_EDispPro_from_RMF(self.conf.IRFfilepath['RMF'])
@@ -77,7 +77,7 @@ class GBMScheduler(Scheduler):
         return None
         
 
-    def _define_GTIs(self):
+    def DefineGTIs(self):
         """
         Compute the Schedule and define the GTI objects for the simulations.
         Each one represents a different time bin of the simulation.
@@ -92,7 +92,7 @@ class GBMScheduler(Scheduler):
         
         return GTIs
     
-    def _read_Background_from_BAK(self, Filepath):
+    def ReadBackgroundFromBAK(self, Filepath):
         """
         Read Background Spectrum from a .bak file.
         
@@ -178,7 +178,7 @@ class GBMScheduler(Scheduler):
     
     
     
-    def _read_DRM_from_RSP(self, Filepath):
+    def ReadDRMfromRSP(self, Filepath):
         """
         Read Background Spectrum from a .bak file.
         
@@ -252,7 +252,7 @@ class GBMScheduler(Scheduler):
         return MapDRM
     
     
-    def Compute_Exposure_from_DRM(self, MapDRM):
+    def ComputeExposureFromDRM(self, MapDRM):
         """
         Compute an Exposure Map in the analysis Geometry from the MapDRM.
         
@@ -318,7 +318,7 @@ class GBMScheduler(Scheduler):
         
         return ExposureMap
     
-    def Compute_EDispPro_from_DRM(self, MapDRM):
+    def ComputeEDispProFromDRM(self, MapDRM):
         """
         Compute Energy Dispersion Matrix from a Detector Response Matrix.
         

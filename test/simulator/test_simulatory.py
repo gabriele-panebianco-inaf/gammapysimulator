@@ -76,6 +76,7 @@ class TestSimulatorCTA:
         assert datasets.energy_ranges[1][0].value == pytest.approx(100)
         
         # Assert information on light curve
+        #table_diff = datasets.info_table()
         table_diff = utils.info_table(datasets)
         
         assert table_diff['npred_signal'].data == pytest.approx(np.array([407.0,407.0,407.0,407.0]), abs=1.0)
