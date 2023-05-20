@@ -14,7 +14,7 @@ with open("README.md", "r") as readme_file:
     readme = readme_file.read()
 
 # REQUIREMENTS
-with open("requirements.txt", "r", encoding="utf-8") as fh:
+with open("requirements.lock", "r", encoding="utf-8") as fh:
    requirements = [d.strip() for d in fh.readlines() if "#" not in d]
 
 # SCRIPTS
