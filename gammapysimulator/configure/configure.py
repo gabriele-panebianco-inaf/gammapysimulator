@@ -15,6 +15,7 @@ from regions import CircleSkyRegion
 
 import logging
 import yaml
+import shutil
 
 from gammapysimulator.tools import logger, utils
 
@@ -50,6 +51,7 @@ class SimulationConfigurator:
         
         # Set Output Directory and log file
         self.SetOutput(configuration)
+        shutil.copyfile(ConfigurationFileName, self.OutputDirectory.joinpath("configuration.yaml"))
             
         # Set General Paramenters of Simulation
         self.SetSimulation(configuration)
@@ -156,9 +158,21 @@ class SimulationConfigurator:
             raise ValueError("Cannot perform 3D simulations with Point-like IRFs.")
         
         # Set IRFs File Path
-        self.IRFfilepath = Path(utils.get_absolute_path(configuration['IRF']['FilePath'])).absolute()
-        if not self.IRFfilepath.is_file():
-            raise FileNotFoundError(f"IRF file not found: {self.IRFfilepath}")
+        try:
+            # Single IRFs File: FilePath is a string
+            self.IRFfilepath = Path(utils.get_absolute_path(configuration['IRF']['FilePath'])).absolute()
+            # Check for file existence
+            if not self.IRFfilepath.is_file():
+                raise FileNotFoundError(f"IRF file not found: {self.IRFfilepath}")
+            
+        except TypeError:
+            # Multiple IRFs Files (e.g. RMF, ARF, RSP, BAK): FilePath is a dict.
+            self.IRFfilepath = {}
+            for key in configuration['IRF']['FilePath'].keys():
+                self.IRFfilepath[key] = Path(utils.get_absolute_path(configuration['IRF']['FilePath'][key])).absolute()
+                # Check for file existence
+                if not self.IRFfilepath[key].is_file():
+                    raise FileNotFoundError(f"IRF file not found: {self.IRFfilepath}")            
         
         return None
     
@@ -181,7 +195,7 @@ class SimulationConfigurator:
         # Energy Axes
         self.energyUnit = u.Unit(str(configuration['Geometry']['Energy']['Unit']))
         
-        self.axis_energy_reco = MapAxis.from_energy_bounds(
+        self.AxisEnergyReco = MapAxis.from_energy_bounds(
             configuration['Geometry']['Energy']['RangeReco'][0] * self.energyUnit,
             configuration['Geometry']['Energy']['RangeReco'][1] * self.energyUnit,
             configuration['Geometry']['Energy']['RecoBinPerDecade'],
@@ -189,7 +203,7 @@ class SimulationConfigurator:
             name='energy'
             )
         
-        self.axis_energy_true = MapAxis.from_energy_bounds(
+        self.AxisEnergyTrue = MapAxis.from_energy_bounds(
             configuration['Geometry']['Energy']['RangeTrue'][0] * self.energyUnit,
             configuration['Geometry']['Energy']['RangeTrue'][1] * self.energyUnit,
             configuration['Geometry']['Energy']['TrueBinPerDecade'],
@@ -228,7 +242,7 @@ class SimulationConfigurator:
                                       binsz = self.resolution.to('deg').value,
                                       width = (self.FoVRadius, self.FoVRadius),
                                       frame = self.frame,
-                                      axes  = [self.axis_energy_reco]
+                                      axes  = [self.AxisEnergyReco]
                                       )
             
         elif self.analysis=="1D":
@@ -239,7 +253,7 @@ class SimulationConfigurator:
             self.RegionRadius = float(configuration['Geometry']['Space']['RegionRadius']) * self.frameUnit
             
             geometry = RegionGeom.create(CircleSkyRegion(self.target, self.RegionRadius),
-                                         axes = [self.axis_energy_reco]
+                                         axes = [self.AxisEnergyReco]
                                          )
         self.geometry = geometry
         

@@ -7,16 +7,24 @@
 #######################################################
 
 from gammapy.data import Observation, Observations
+from gammapy.datasets import SpectrumDataset, MapDataset, Datasets
 from gammapy.irf import load_cta_irfs
+from gammapy.makers import SpectrumDatasetMaker, MapDatasetMaker, SafeMaskMaker
+from time import time
+from tqdm import tqdm
+
+from gammapysimulator.configure.configure import SimulationConfigurator
+from gammapysimulator.scheduler.scheduler import Scheduler
+from gammapysimulator.tools.export import ExportSimulations
 
 import numpy as np
 
-class CTAScheduler:
+class CTAScheduler(Scheduler):
     """
     Class that organises Observations and Datasets with CTA IRFs.
     """
     
-    def __init__(self, configurator) -> None:
+    def __init__(self, configurator : SimulationConfigurator, exporter : ExportSimulations) -> None:
         """
         Instantiate Scheduler by reading IRFs.
         
@@ -24,51 +32,44 @@ class CTAScheduler:
         ----------
         configurator : gammapysimulator.configure.configure.SimulationConfigurator
             Configurator object.
+        exporter : gammapysimulator.tools.export.ExportSimulations
+            Export object.
         """
         
         self.conf= configurator
         self.log = configurator.log
+        self.exporter = exporter
         
         # Load IRFs
         self.log.info(f"Load CTA IRFs from file: {self.conf.IRFfilepath}")      
         self.irfs = load_cta_irfs(self.conf.IRFfilepath)
+        self.exporter.PlotCTAIRFs(self.irfs)
 
-
-
-    def DefineSchedule(self):
+    def ScheduleDatasets(self):
         """
-        Define the Schedule: start and stop of each Observation (tme bin).
+        Load IRFs compatible with XSPEC and create a SpectrumDataset with only IRFs.
         """
-
-        # Estimate Number of observations to use numpy linspace
-        ObservationsNumber = (self.conf.timeStop - self.conf.timeStart) / self.conf.timeReso
-        ObservationsNumber = int(np.floor(ObservationsNumber.to('').value))
-
-        # Define starting time of each observation linearly spaced during the night (wrt reference time)
-        ObservationsStart, Livetimes = np.linspace(self.conf.timeStart.value,
-                                                   self.conf.timeStop.value,
-                                                   num = ObservationsNumber,
-                                                   endpoint=False,
-                                                   retstep=True
-                                                   )
-        # Compute Stops and Number
-        ObservationsStop = ObservationsStart+Livetimes
-        ObservationsNumber = ObservationsStart.size
+        # Read IRFs and Set the observations
+        observations = self.SetObservations()
         
-        # Convert to Astropy Quantity
-        ObservationsStart= ObservationsStart.tolist()* self.conf.timeUnit
-        ObservationsStop = ObservationsStop.tolist() * self.conf.timeUnit
-        Livetimes = Livetimes * self.conf.timeUnit
+        # Set PSF Containment
+        self.psf_containment = "psf" in self.irfs
+        self.log.info(f"PSF Containment: {self.psf_containment}")
         
-        # Log
-        self.log.info(f"Number of Observations: {ObservationsNumber}. Livetimes: {Livetimes}.")
-        self.log.info(f"Observation interval: [{ObservationsStart[0]},{ObservationsStop[-1]}].")
+        # Reduce IRFs to get the Datasets
+        self.emptydatasets = self.MakeReducedIRFsDatasets(observations)
+        
+        return None
 
-        return ObservationsStart, ObservationsStop
-    
+
     def SetObservations(self):
         """
         Define the Observations object.
+        
+        Return
+        ------
+        observations : gammapy.data.Observations
+            Collection of Observation with IRFs and time bin information.
         """
         
         # Create Schedule
@@ -88,5 +89,60 @@ class CTAScheduler:
                                      )
             observations.append(obs)
             
-        self.observations = observations
+        return observations
+
+    def MakeReducedIRFsDatasets(self, observations):
+        """
+        Bundle IRFs and GTIs into a collection of Datasets.
+        
+        Parameters
+        ----------
+        observations : gammapy.data.Observations
+            Collection of observations with DL3 IRFs and GTIs.
+        
+        Return
+        ------
+        datasets : gammapy.datasets.Datasets
+            Collection of Datasets with Reduced IRFs and GTIs.
+        """
+        if self.conf.analysis=="3D":
+            empty = MapDataset.create(geom = self.conf.geometry,
+                                      energy_axis_true = self.conf.AxisEnergyTrue,
+                                      name = "empty",
+                                      )
+            maker = MapDatasetMaker(selection = ['exposure', 'background', 'psf', 'edisp'])
+        
+            safe_mask_maker = SafeMaskMaker(methods = ["aeff-default","offset-max"],
+                                            offset_max = 2*self.conf.FoVRadius
+                                            )
+        elif self.conf.analysis=="1D":
+            empty = SpectrumDataset.create(geom = self.conf.geometry,
+                                           energy_axis_true = self.conf.AxisEnergyTrue,
+                                           name = "empty"
+                                           )
+            maker = SpectrumDatasetMaker(selection = ["exposure", "background", "edisp"],
+                                         containment_correction = self.psf_containment
+                                         )
+            safe_mask_maker = SafeMaskMaker(methods = ["aeff-default"])
+        
+        # Define Datasets collection
+        datasets = Datasets()
+        
+        # Perform reduction and measure time
+        self.log.info(f"Perform DL3->DL4 IRFs reduction for a {self.conf.analysis} simulation...")
+        now = time()
+        
+        for idx, obs in enumerate(tqdm(observations, desc="Reduction Loop")):
+
+            # Set Name and run DL3->DL4 Reduction
+            dataset = maker.run(empty.copy(name = f"dataset-{idx}"), obs)
+            dataset = safe_mask_maker.run(dataset, obs)
+            
+            # Add current dataset to the Datasets() object
+            datasets.append(dataset)
+            
+        self.log.info(f"Reduction performed in {float(time()-now):.3f} s.")
+        
+        # Return the simulated Datasets
+        return datasets
         

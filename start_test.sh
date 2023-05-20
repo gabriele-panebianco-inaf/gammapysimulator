@@ -26,7 +26,7 @@ pytest \
  --junitxml=$DIRECTORY_JUNIT/tests_report.xml \
  --cov=$GAMMAPYSIMULATOR/gammapysimulator \
  --cov-config=.coveragerc \
- -v \
+ -vv \
  --exitfirst \
  -s
 

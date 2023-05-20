@@ -86,8 +86,8 @@ class TestSimulationConfigurator:
         
         # Geometry - Energy
         assert configurator.energyUnit == u.TeV
-        assert configurator.axis_energy_reco == MapAxis.from_energy_bounds("0.3 TeV", "100 TeV", 4, per_decade=True,name='energy')
-        assert configurator.axis_energy_true == MapAxis.from_energy_bounds("0.1 TeV", "300 TeV", 5, per_decade=True,name='energy_true')
+        assert configurator.AxisEnergyReco == MapAxis.from_energy_bounds("0.3 TeV", "100 TeV", 4, per_decade=True,name='energy')
+        assert configurator.AxisEnergyTrue == MapAxis.from_energy_bounds("0.1 TeV", "300 TeV", 5, per_decade=True,name='energy_true')
         
         # Geometry - Space
         assert configurator.frame =="icrs"
@@ -99,7 +99,7 @@ class TestSimulationConfigurator:
         assert configurator.geometry == RegionGeom.create(CircleSkyRegion(configurator.target,
                                                                           configurator.RegionRadius
                                                                           ),
-                                                          axes = [configurator.axis_energy_reco]
+                                                          axes = [configurator.AxisEnergyReco]
                                                           )
         
     def test_initCTA3D(self, path_repository, path_configuration_files):
@@ -148,8 +148,8 @@ class TestSimulationConfigurator:
         
         # Geometry - Energy
         assert configurator.energyUnit == u.TeV
-        assert configurator.axis_energy_reco == MapAxis.from_energy_bounds("0.3 TeV", "100 TeV", 4, per_decade=True,name='energy')
-        assert configurator.axis_energy_true == MapAxis.from_energy_bounds("0.1 TeV", "300 TeV", 5, per_decade=True,name='energy_true')
+        assert configurator.AxisEnergyReco == MapAxis.from_energy_bounds("0.3 TeV", "100 TeV", 4, per_decade=True,name='energy')
+        assert configurator.AxisEnergyTrue == MapAxis.from_energy_bounds("0.1 TeV", "300 TeV", 5, per_decade=True,name='energy_true')
         
         # Geometry - Space
         assert configurator.frame =="icrs"
@@ -162,7 +162,70 @@ class TestSimulationConfigurator:
                                                        binsz = 0.02,
                                                        width = (5*u.deg, 5*u.deg),
                                                        frame = "icrs",
-                                                       axes  = [configurator.axis_energy_reco]
+                                                       axes  = [configurator.AxisEnergyReco]
                                                        )
+        
+    def test_initGBM1D(self, path_repository, path_configuration_files):
+        """
+        Test that a YAML configuration file is read.
+        Use GBM 1D configuration.       
+        """
+        
+        # Instantiate Configurator
+        configurator = SimulationConfigurator()        
+        # Read Configuration file
+        configurator.read(path_configuration_files['configurationGBM1D'])
+        
+        # Assert log file exists
+        assert os.path.isfile(path_repository.joinpath("SIMULATIONS/TestGBM1D/simulator.log"))
+        
+        # Assert attributes value
+        
+        # Simulation
+        assert configurator.seed == 7
+        assert configurator.simN == 2
+        assert configurator.OutputDirectory == path_repository.joinpath("SIMULATIONS/TestGBM1D")
+        assert configurator.OutputID == "TestGBM1D"
+        assert configurator.product == "DL4"
+        assert configurator.analysis == "1D"
+        
+        # Model
+        assert configurator.modelfilepath == Path(path_configuration_files['modelGRB'])
+        
+        # IRF
+        assert configurator.instrument == "Fermi-GBM"
+        assert configurator.detector == "n1"
+        assert configurator.irf_pointlike == True
+        assert configurator.IRFfilepath['RSP'] == Path(path_configuration_files['irfGBMrsp'])
+        assert configurator.IRFfilepath['BAK'] == Path(path_configuration_files['irfGBMbak'])
+        
+        # Target and Pointing
+        assert configurator.pointing == SkyCoord(177.52, 40.0, frame="galactic", unit="deg")
+        assert configurator.target   == SkyCoord(177.52, 40.0, frame="galactic", unit="deg")
+        
+        # Geometry - Time
+        assert configurator.timeUnit == u.s
+        assert configurator.timeStart.value== pytest.approx(-5.0, 1E-2)
+        assert configurator.timeStop.value == pytest.approx(20.0, 1E-2)
+        assert configurator.timeReso.value == pytest.approx(1.0, 1E-2)
+        assert configurator.timeRef  == Time("2016-05-30T16:01:12")
+        
+        # Geometry - Energy
+        assert configurator.energyUnit == u.keV
+        assert configurator.AxisEnergyReco == MapAxis.from_energy_bounds( "10 keV",  "900 keV", 10, per_decade=True,name='energy')
+        assert configurator.AxisEnergyTrue == MapAxis.from_energy_bounds("5.0 keV", "1000 keV", 20, per_decade=True,name='energy_true')
+        
+        # Geometry - Space
+        assert configurator.frame =="galactic"
+        assert configurator.frameUnit == u.deg
+        assert configurator.RegionRadius.value == pytest.approx(0.2,1E-2)
+        assert not hasattr(configurator, 'FoVRadius')
+        assert not hasattr(configurator, 'resolution')
+
+        assert configurator.geometry == RegionGeom.create(CircleSkyRegion(configurator.target,
+                                                                          configurator.RegionRadius
+                                                                          ),
+                                                          axes = [configurator.AxisEnergyReco]
+                                                          )
         
         

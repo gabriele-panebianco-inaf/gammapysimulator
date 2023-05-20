@@ -13,10 +13,12 @@ import os
 import pathlib
 import shutil
 
+from astropy.coordinates import SkyCoord, Angle
 from astropy.table import Table
 from gammapy.datasets import Datasets
 from gammapy.utils.table import table_from_row_data
 from matplotlib import use
+from matplotlib.colors import LogNorm, PowerNorm
 
 from gammapysimulator.configure.configure import SimulationConfigurator
 from gammapysimulator.tools import utils
@@ -27,7 +29,7 @@ class ExportSimulations:
     Class that exports simualation results.
     """
     
-    def __init__(self, conf : SimulationConfigurator, datasets, backend='Agg', plotformat='png') -> None:
+    def __init__(self, conf : SimulationConfigurator, backend='Agg', plotformat='png') -> None:
         """
         Instantiate export class by setting configurator and datasets.
         
@@ -35,8 +37,6 @@ class ExportSimulations:
         ----------
         conf : gammapysimulator.configure.configure.SimulationConfigurator
             Configurator object.
-        datasets : gammapy.datasets.Datasets()
-            Simulated datasets.
         backend : str
             Backend to save plots.
         plotformat : str
@@ -45,6 +45,28 @@ class ExportSimulations:
         # Set attributes
         self.conf= conf
         self.log = conf.log
+        
+        # Make extra directories to store results
+        os.makedirs(self.conf.OutputDirectory.joinpath("plots"))
+        os.makedirs(self.conf.OutputDirectory.joinpath("datasets"))
+        os.makedirs(self.conf.OutputDirectory.joinpath("irfs"))
+        
+        # Set Graphical options
+        use(backend)
+        self.plotformat=plotformat
+        
+        return None
+    
+    def WriteResults(self, datasets):
+        """
+        Write Results according to requested analysis.
+        
+        Parameters
+        ----------
+        datasets : gammapy.datasets.Datasets()
+            Simulated datasets.
+        """
+        # Set Simuulated Datasets
         self.datasets = datasets
         
         # Add time start and stop arrays
@@ -54,23 +76,9 @@ class ExportSimulations:
         self.time_start = time_start.to('s')
         self.time_stop  = time_stop.to( 's')
         
-        # Set Graphical options
-        use(backend)
-        self.plotformat=plotformat
-        
-        return None
-    
-    def WriteResults(self):
-        """
-        Write Results according to requested analysis.
-        """
-        # Make extra results directories
-        os.makedirs(self.conf.OutputDirectory.joinpath("plots"))
-        os.makedirs(self.conf.OutputDirectory.joinpath("datasets"))
-        
         if self.conf.product=="DL4":
             if self.conf.analysis=="1D":
-                self.WriteDL4InfoTable()
+                self.WriteDL4InfoTable(cumulative=False)
                 self.WriteDL4InfoTable(cumulative=True)
                 self.PlotLightCurve()
                 self.WriteDatasets()
@@ -100,8 +108,8 @@ class ExportSimulations:
             Write Differential or cumulative results
         """
         # Get table
-        #info_table = self.datasets.info_table()
-        info_table = utils.info_table(self.datasets)
+        #info_table = self.datasets.info_table(cumulative=cumulative)
+        info_table = utils.info_table(self.datasets, cumulative=cumulative)
         
         # Add time start and stop columns
         info_table['time_start'] = self.time_start
@@ -139,8 +147,8 @@ class ExportSimulations:
         excess_errors = np.sqrt(np.power(counts_errors,2)+np.power(background_errors,2) )
         time_center =(self.time_stop + self.time_start) / 2.0
         time_errors =(self.time_stop - self.time_start) / 2.0
-        e_min = self.conf.axis_energy_reco.bounds[0].value
-        e_max = self.conf.axis_energy_reco.bounds[1].value
+        e_min = self.conf.AxisEnergyReco.bounds[0].value
+        e_max = self.conf.AxisEnergyReco.bounds[1].value
         
         # Make Plot
         fig, ax = plt.subplots(1, figsize = (10, 5), constrained_layout=True)
@@ -199,16 +207,19 @@ class ExportSimulations:
         spectrum_table['e_max'] = stacked.geoms['geom'].axes['energy'].edges_max
         spectrum_table['e_ref'] = stacked.geoms['geom'].axes['energy'].center
         spectrum_table['counts']= np.squeeze(stacked.counts.data)
-        spectrum_table['counts_off']= np.squeeze(stacked.counts_off.data)
         spectrum_table['background']= np.squeeze(stacked.background.data)
         spectrum_table['excess']= np.squeeze(stacked.excess.data)
-        spectrum_table['alpha']= np.squeeze(stacked.alpha.data)
-        spectrum_table['acceptance']= np.squeeze(stacked.acceptance.data)
-        spectrum_table['acceptance_off']= np.squeeze(stacked.acceptance_off.data)
+        try:
+            spectrum_table['counts_off']= np.squeeze(stacked.counts_off.data)
+            spectrum_table['alpha']= np.squeeze(stacked.alpha.data)
+            spectrum_table['acceptance']= np.squeeze(stacked.acceptance.data)
+            spectrum_table['acceptance_off']= np.squeeze(stacked.acceptance_off.data)
+            spectrum_table['npred_off']=np.squeeze(stacked.npred_off().data)
+        except AttributeError as e:
+            self.log.warning(f"No off quantities simulated.")
         spectrum_table['npred_signal']=np.squeeze(stacked.npred_signal().data)
         spectrum_table['npred_background']=np.squeeze(stacked.npred_background().data)
         spectrum_table['npred']=np.squeeze(stacked.npred().data)
-        spectrum_table['npred_off']=np.squeeze(stacked.npred_off().data)
         spectrum_table['stat_array']=np.squeeze(stacked.stat_array())
         spectrum_table['sqrt_ts']=stacked._counts_statistic[stacked.mask_safe.data].sqrt_ts
         spectrum_table['counts_rate']= spectrum_table['counts'] / stacked_dict['livetime']
@@ -260,6 +271,7 @@ class ExportSimulations:
         ax.plot(energy_center, npred_signal, label="Npred Signal")
         ax.plot(energy_center, npred_background, label="Npred Background")
 
+        # Graphics
         ax.set_xlabel(f"Energy / {stacked.geoms['geom'].axes['energy'].unit}", fontsize = 'large')
         ax.set_ylabel('Counts', fontsize = 'large')
         ax.set_xscale('log')
@@ -274,4 +286,220 @@ class ExportSimulations:
         figure_name = self.conf.OutputDirectory.joinpath(f"plots/stacked_spectrum.{self.plotformat}")
         self.log.info(f"Write {figure_name}")
         fig.savefig(figure_name)
+        return None
+    
+    
+    def PlotCTAIRFs(self, irfs):
+        """
+        Plot and save the CTA IRFs.
+        
+        Parameters
+        ----------
+        irfs : dict
+            Dictionary with CTA IRFs.
+        """
+        try:
+            self.PlotCTAEffectiveArea(irfs['aeff'])
+        except KeyError as e:
+            self.log.warning(e)
+            
+        try:
+            self.PlotCTABackground(irfs['bkg'])
+        except KeyError as e:
+            self.log.warning(e)
+        
+        try:
+            self.PlotCTAEnergyDispersion(irfs['edisp'])
+        except KeyError as e:
+            self.log.warning(e)
+            
+        try:
+            self.PlotCTAPSF(irfs['psf'])
+        except KeyError as e:
+            self.log.warning(e)
+            
+        return None
+    
+    def PlotCTAEffectiveArea(self, aeff):
+        """
+        Plot effective area.
+        
+        Parameters
+        ----------
+        aeff : gammapy.irf.EffectiveAreaTable2D
+            Effective Area.
+        """
+        fig, axs = plt.subplots(1,3, figsize=(24,8), constrained_layout=True)
+        aeff.plot_energy_dependence(ax=axs[0], offset=Angle([0,0.4,1,2,3]*u.deg), drawstyle='steps-mid')
+        aeff.plot(ax=axs[1], add_cbar=True)
+        aeff.plot_offset_dependence(ax=axs[2])
+        
+        axs[0].loglog()
+        
+        axs[0].grid()
+        axs[1].grid(color='white', ls='dotted')
+        axs[2].grid()
+        
+        figure_name = self.conf.OutputDirectory.joinpath(f"irfs/effectivearea.{self.plotformat}")
+        self.log.info(f"Write {figure_name}")
+        fig.savefig(figure_name)
+        return None
+    
+    def PlotCTABackground(self, bkg):
+        """
+        Plot Background.
+        
+        Parameters
+        ----------
+        bkg : gammapy.irf.Background2D or Background3D
+            Background.
+        """
+        return None
+    
+    def PlotCTAEnergyDispersion(self, edisp):
+        """
+        Plot Energy Dispersion.
+        
+        Parameters
+        ----------
+        edisp : gammapy.irf.
+            Energy Dispersion.
+        """
+        return None
+    
+    def PlotCTAPSF(self, psf):
+        """
+        Plot PSF.
+        
+        Parameters
+        ----------
+        psf : gammapy.irf.
+            PSF.
+        """
+        return None
+    
+    
+
+    def PlotStep(self, functions, labels):
+        """
+        Plot functions as step histograms.
+        
+        Parameters
+        ----------
+        functions : list of (astropy.Quantity, astropy.Quantity, str)
+            First quantity is x centroid, second is y value, third is label.
+        labels : dict
+            Values are string, keys are xlabel, ylabel, xscale, yscale, title, figurename.
+        """
+        
+        # Make Plot
+        fig, ax = plt.subplots(1, figsize = (10, 5), constrained_layout=True)
+        
+        for function in functions:
+            ax.step(function[0], function[1], where='mid', label=function[2])
+        
+        # Graphics
+        ax.set_xlabel(labels['xlabel'], fontsize = 'large')
+        ax.set_ylabel(labels['ylabel'], fontsize = 'large')
+        ax.set_xscale(labels['xscale'])
+        ax.set_yscale(labels['yscale'])
+        ax.set_title( labels['title' ], fontsize = 'large')
+        ax.grid()
+        ax.legend()
+        
+        # Save Plot
+        figure_name = self.conf.OutputDirectory.joinpath(f"{labels['figurename']}.{self.plotformat}")
+        self.log.info(f"Write {figure_name}")
+        fig.savefig(figure_name)
+        return None
+    
+    def PlotDRM(self,
+                MapDRM,
+                stretch='linear',
+                cmap='plasma',
+                extracolor='white',
+                filename='DRM'
+                ):
+        """
+        Plot the DRM read from file.
+        
+        Parameters
+        ----------
+        MapDRM : gammapy.maps.RegionNDMap
+            Map containing the Detector Response Matrix and its geometry.
+        stretch : str or float
+            Normalization of the Colorbar.
+        cmap :  str
+            Colormap name of `matplotlib.colorbar.Colorbar`
+        extracolor : str
+            Color for secondary graphical elements.
+        filename : str
+            File name for the plot.
+        """
+        
+        # Prepare Grid
+        X, Y = np.meshgrid(MapDRM.geom.axes['energy_true'].center.value,
+                           MapDRM.geom.axes['energy'].center.value
+                           )
+
+        # Copy Data with Masking
+        DRM = np.squeeze(MapDRM.data)
+        Z = np.ma.masked_where(DRM.T <= 0, DRM.T)
+        
+        # Define Color Normalization
+        if stretch == "log":
+            norm = LogNorm()
+            
+            # Define Countour Levels
+            levs = np.linspace(np.floor(np.log10(Z.min())),
+                               np.ceil( np.log10(Z.max())),
+                               num = 50
+                              )
+            levs = np.power(10, levs)
+        
+        elif stretch in ['linear', 'sqrt'] or isinstance(stretch, float):
+            
+            if stretch=="linear":
+                gamma=1.0
+            elif stretch=="sqrt":
+                gamma=0.5
+            else:
+                gamma=stretch
+            norm = PowerNorm(gamma=gamma)
+            
+            # Define Countour Levels
+            levs = np.linspace(np.floor(np.power(Z.min(),gamma)),
+                               np.ceil( np.power(Z.max(),gamma)),
+                               num = 50
+                              )
+            levs = np.power(levs, 1.0/gamma)
+        else:
+            raise NotImplementedError(f"stretch={stretch} not allowed. Only float or string in[\'linear\', \'sqrt\', \'log\'] are allowed.") 
+
+
+        # Plot
+        fig, ax = plt.subplots(1, figsize=(9,5))
+
+        # Plot Data
+        cs = ax.contourf(X, Y, Z, levs, norm = norm, cmap = cmap)
+        _  = ax.contour( X, Y, Z, levs, norm = norm, colors=extracolor, alpha=0.05)
+        cbar = fig.colorbar(cs, ax=ax, location='right', shrink=0.9)
+        
+        # Graphics
+        ax.set_facecolor(cs.cmap(0))
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.grid(color=extracolor, ls='dotted')
+        cbar.set_label(f"Effective Area Redistribution / {MapDRM.unit}", fontsize = 'large', rotation=90)
+        ax.set_xlabel(f"True Energy [{MapDRM.geom.axes['energy_true'].unit}]", fontsize = 'large')
+        ax.set_ylabel(f"Reco Energy [{MapDRM.geom.axes['energy'].unit}]", fontsize = 'large')
+        ax.set_title(f"Detector Response Matrix {self.conf.instrument} {self.conf.detector}",
+                     fontsize = 'large'
+                     )
+
+        # Save Plot
+        figure_name = self.conf.OutputDirectory.joinpath(f"irfs/{filename}.{self.plotformat}")
+        self.log.info(f"Write {figure_name}")
+        fig.savefig(figure_name, facecolor = 'white')
+        
         return None

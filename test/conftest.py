@@ -31,8 +31,12 @@ def path_configuration_files(path_repository):
     path_data = path_repository.joinpath("test/data")
     files={'configurationCTA1D':str(path_data.joinpath("configurationCTA1D.yml")),
            'configurationCTA3D':str(path_data.joinpath("configurationCTA3D.yml")),
+           'configurationGBM1D':str(path_data.joinpath("configurationGBM1D.yml")),
            'modelCrab':str(path_data.joinpath("modelCrab.yml")),
-           'irfCTA':str(path_data.joinpath('Prod5-North-20deg-AverageAz-4LSTs09MSTs.1800s-v0.1.fits'))
+           'modelGRB' :str(path_data.joinpath("modelGRB.yml" )),
+           'irfCTA'   :str(path_data.joinpath('Prod5-North-20deg-AverageAz-4LSTs09MSTs.1800s-v0.1.fits')),
+           'irfGBMrsp':str(path_data.joinpath('glg_cspec_n1_bn160530667_v00.rsp')),
+           'irfGBMbak':str(path_data.joinpath('glg_cspec_n1_bn160530667_v00_200ms_10_900_keV.bak'))
            }
     return files
 
