@@ -79,10 +79,9 @@ class TestSimulatorCTA:
         #table_diff = datasets.info_table()
         table_diff = utils.info_table(datasets)
         
-        assert table_diff['npred_signal'].data == pytest.approx(np.array([407.0,407.0,407.0,407.0]), abs=1.0)
-        assert table_diff['npred_background'].data == pytest.approx(np.array([159.0, 159.0, 159.0, 159.0]), abs=7.0)
-        assert table_diff['counts'].data == pytest.approx(np.array([566, 583, 534, 574]),abs=1.0)
-        assert table_diff['background'].data == pytest.approx(np.array([165.8, 158.8, 161.0, 155.0]),abs=1.0)
+        assert table_diff['npred_signal'].data == pytest.approx(407.0*np.ones(4), abs=1.0)
+        assert table_diff['npred_background'].data == pytest.approx(162.4*np.ones(4), abs=1.0)
+        assert table_diff['counts'].data == pytest.approx(np.array([534, 574, 548, 578]),abs=1.0)
 
         # Assert information on stacked spectrum
         stacked = datasets.stack_reduce(name="stacked")
@@ -90,16 +89,15 @@ class TestSimulatorCTA:
         
         assert stacked.geoms['geom'].axes['energy'].nbin == 11
         
-        assert np.squeeze(stacked.counts.data) == pytest.approx(np.array([810,491,312,257,163,95,73,26,17,9,4]),abs=1.0)
-        assert np.squeeze(stacked.background.data)== pytest.approx(np.array([312.2,151.6,87.8,54.4,18.4,8.0,4.4,1.4,1.2,0.4,0.8]),abs=1.0)
-        assert np.squeeze(stacked.npred_signal().data)== pytest.approx(np.array([479.7,366.1,254.7,191.4,142.7,93.8,47.9,22.8,14.8,8.9,4.7]),abs=1.0)
-        assert np.squeeze(stacked.npred_background().data)== pytest.approx(np.array([313.5,150.1,86.32,54.9,18.4,7.9,4.8,1.4,1.2,0.4,0.8]),abs=1.0)
+        assert np.squeeze(stacked.counts.data) == pytest.approx(np.array([782, 516, 340, 233, 152, 103, 50, 24, 21, 6, 7]),abs=1.0)
+        assert np.squeeze(stacked.npred_signal().data)== pytest.approx(np.array([479.7, 366.1, 254.7, 191.4, 142.7, 93.8, 47.9, 22.8, 14.8, 8.9, 4.7]), abs=1.0)
+        assert np.squeeze(stacked.npred_background().data)== pytest.approx(np.array([308.3, 160.8, 93.8, 49.5, 21.0, 8.7, 3.7, 1.5, 1.0, 0.8, 0.6]), abs=1.0)
         
         stacked_dict = stacked.info_dict()
         
-        assert stacked_dict['counts'] == 2257
-        assert stacked_dict['sqrt_ts'] == pytest.approx(43, abs=1.0)
-        assert stacked_dict['background'] == pytest.approx(640, abs=1.0)
+        assert stacked_dict['counts'] == 2234
+        assert stacked_dict['sqrt_ts'] == pytest.approx(48, abs=1.0)
+        assert stacked_dict['background'] == pytest.approx(649, abs=1.0)
         assert stacked_dict['exposure_min'].value == pytest.approx( 2989892864.0, abs=1.0)
         assert stacked_dict['exposure_max'].value == pytest.approx(17710960640.0, abs=1.0)
         assert stacked_dict['livetime'].value == pytest.approx(14400, abs=1.0)

@@ -47,14 +47,14 @@ class TestRunSimulator:
         
         assert os.path.isfile(OutputDirectory.joinpath("datasets/datasets.fits"))
         assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked.fits"))
-        assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_arf.fits"))
-        assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_rmf.fits"))
-        assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_bkg.fits"))
+        #assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_arf.fits"))
+        #assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_rmf.fits"))
+        #assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_bkg.fits"))
         for i in range(4):
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}.fits"))
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_arf.fits"))
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_rmf.fits"))
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_bkg.fits"))
+            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/dataset-{i}.fits"))
+            #assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_arf.fits"))
+            #assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_rmf.fits"))
+            #assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_bkg.fits"))
         
         return None
     
@@ -86,14 +86,14 @@ class TestRunSimulator:
         
         assert os.path.isfile(OutputDirectory.joinpath("datasets/datasets.fits"))
         assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked.fits"))
-        assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_arf.fits"))
-        assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_rmf.fits"))
-        assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_bkg.fits"))
+        #assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_arf.fits"))
+        #assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_rmf.fits"))
+        #assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_bkg.fits"))
         for i in range(25):
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}.fits"))
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_arf.fits"))
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_rmf.fits"))
-            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_bkg.fits"))
+            assert os.path.isfile(OutputDirectory.joinpath(f"datasets/dataset-{i}.fits"))
+            #assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_arf.fits"))
+            #assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_rmf.fits"))
+            #assert os.path.isfile(OutputDirectory.joinpath(f"datasets/pha_obsonoff-{i}_bkg.fits"))
         
         return None
     

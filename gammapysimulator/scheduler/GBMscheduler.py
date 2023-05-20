@@ -247,6 +247,11 @@ class GBMScheduler(Scheduler):
         # Combine Geometry and DRM Matrix into RegionNDMap
         MapDRM = RegionNDMap.from_geom(Geometry, data=DRM, unit=DRMUnit, meta=SpecResp.meta)
         
+        try:
+            MapDRM = MapDRM.to_unit('m2')
+        except:
+            self.log.warning(f"DRM [{DRMUnit}] conversion to m2 failed")
+        
         self.exporter.PlotDRM(MapDRM, stretch=0.3, filename="DetectorResponseMatrix_rsp")
         
         return MapDRM
@@ -416,7 +421,7 @@ class GBMScheduler(Scheduler):
                                               exposure=ExposureMap,
                                               edisp=EnergyDispersionMap,
                                               gti=gti,
-                                              name=f"empty-{i}",
+                                              name=f"dataset-{i}",
                                               mask_safe=MaskSafe
                                               )
             datasets.append(spectrumdataset)

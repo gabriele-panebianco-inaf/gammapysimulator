@@ -78,7 +78,7 @@ class ExportSimulations:
         
         if self.conf.product=="DL4":
             if self.conf.analysis=="1D":
-                self.WriteDL4InfoTable()
+                self.WriteDL4InfoTable(cumulative=False)
                 self.WriteDL4InfoTable(cumulative=True)
                 self.PlotLightCurve()
                 self.WriteDatasets()
@@ -108,8 +108,8 @@ class ExportSimulations:
             Write Differential or cumulative results
         """
         # Get table
-        #info_table = self.datasets.info_table()
-        info_table = utils.info_table(self.datasets)
+        #info_table = self.datasets.info_table(cumulative=cumulative)
+        info_table = utils.info_table(self.datasets, cumulative=cumulative)
         
         # Add time start and stop columns
         info_table['time_start'] = self.time_start
@@ -207,16 +207,19 @@ class ExportSimulations:
         spectrum_table['e_max'] = stacked.geoms['geom'].axes['energy'].edges_max
         spectrum_table['e_ref'] = stacked.geoms['geom'].axes['energy'].center
         spectrum_table['counts']= np.squeeze(stacked.counts.data)
-        spectrum_table['counts_off']= np.squeeze(stacked.counts_off.data)
         spectrum_table['background']= np.squeeze(stacked.background.data)
         spectrum_table['excess']= np.squeeze(stacked.excess.data)
-        spectrum_table['alpha']= np.squeeze(stacked.alpha.data)
-        spectrum_table['acceptance']= np.squeeze(stacked.acceptance.data)
-        spectrum_table['acceptance_off']= np.squeeze(stacked.acceptance_off.data)
+        try:
+            spectrum_table['counts_off']= np.squeeze(stacked.counts_off.data)
+            spectrum_table['alpha']= np.squeeze(stacked.alpha.data)
+            spectrum_table['acceptance']= np.squeeze(stacked.acceptance.data)
+            spectrum_table['acceptance_off']= np.squeeze(stacked.acceptance_off.data)
+            spectrum_table['npred_off']=np.squeeze(stacked.npred_off().data)
+        except AttributeError as e:
+            self.log.warning(f"No off quantities simulated.")
         spectrum_table['npred_signal']=np.squeeze(stacked.npred_signal().data)
         spectrum_table['npred_background']=np.squeeze(stacked.npred_background().data)
         spectrum_table['npred']=np.squeeze(stacked.npred().data)
-        spectrum_table['npred_off']=np.squeeze(stacked.npred_off().data)
         spectrum_table['stat_array']=np.squeeze(stacked.stat_array())
         spectrum_table['sqrt_ts']=stacked._counts_statistic[stacked.mask_safe.data].sqrt_ts
         spectrum_table['counts_rate']= spectrum_table['counts'] / stacked_dict['livetime']

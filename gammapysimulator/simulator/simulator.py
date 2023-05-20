@@ -120,7 +120,7 @@ class Simulator:
         
         # Define Datasets collection
         EmptyDatasets = self.emptydatasets
-        OnOffDatasets = Datasets()
+        NewDatasets = Datasets()
         
         for idx, dataset in enumerate(tqdm(EmptyDatasets, desc="Simulation Loop")):
 
@@ -131,24 +131,26 @@ class Simulator:
             dataset.fake(random_state=random_state)
             
             # Fake OFF counts realization
-            if self.conf.analysis=="3D":
-                dataset_onoff = MapDatasetOnOff.from_map_dataset(dataset=dataset,
-                                                                 acceptance=1,
-                                                                 acceptance_off=5,
-                                                                 name = f"onoff-{idx}"
-                                                                 )
-            elif self.conf.analysis=="1D":
-                dataset_onoff = SpectrumDatasetOnOff.from_spectrum_dataset(dataset=dataset,
-                                                                           acceptance=1,
-                                                                           acceptance_off=5,
-                                                                           name = f"onoff-{idx}"
-                                                                           )
-            dataset_onoff.fake(npred_background=dataset.npred_background(),random_state=random_state)
+            #if self.conf.analysis=="3D":
+            #    dataset_onoff = MapDatasetOnOff.from_map_dataset(dataset=dataset,
+            #                                                     acceptance=1,
+            #                                                     acceptance_off=5,
+            #                                                     name = f"onoff-{idx}"
+            #                                                     )
+            #elif self.conf.analysis=="1D":
+            #    dataset_onoff = SpectrumDatasetOnOff.from_spectrum_dataset(dataset=dataset,
+            #                                                               acceptance=1,
+            #                                                               acceptance_off=5,
+            #                                                               name = f"onoff-{idx}"
+            #                                                               )
+            #dataset_onoff.fake(npred_background=dataset.npred_background(),
+            #                   random_state=random_state
+            #                   )
             
             # Add current dataset to the Datasets() object
-            OnOffDatasets.append(dataset_onoff)
+            NewDatasets.append(dataset)
             
         self.log.info(f"Reduction performed in {float(time()-now):.3f} s.")
         
         # Return the simulated Datasets
-        return OnOffDatasets
+        return NewDatasets
