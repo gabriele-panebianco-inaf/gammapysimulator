@@ -47,7 +47,7 @@ class ExportSimulations:
         self.log = conf.log
         
         # Make extra directories to store results
-        os.makedirs(self.conf.OutputDirectory.joinpath("plots"))
+        os.makedirs(self.conf.OutputDirectory.joinpath("quicklook"))
         os.makedirs(self.conf.OutputDirectory.joinpath("datasets"))
         os.makedirs(self.conf.OutputDirectory.joinpath("irfs"))
         
@@ -117,9 +117,9 @@ class ExportSimulations:
         
         # Write light curve table
         if cumulative:
-            table_name = self.conf.OutputDirectory.joinpath('lightcurve_cumulative.ecsv')
+            table_name = self.conf.OutputDirectory.joinpath('quicklook/lightcurve_cumulative.ecsv')
         else:
-            table_name = self.conf.OutputDirectory.joinpath('lightcurve.ecsv')
+            table_name = self.conf.OutputDirectory.joinpath('quicklook/lightcurve.ecsv')
         
         self.log.info(f"Write {table_name}")
         info_table.write(table_name)
@@ -175,7 +175,7 @@ class ExportSimulations:
         ax.legend(bbox_to_anchor=(1.2, 1.0), loc="upper right")
         
         # Save Plot
-        figure_name = self.conf.OutputDirectory.joinpath(f"plots/lightcurve.{self.plotformat}")
+        figure_name = self.conf.OutputDirectory.joinpath(f"quicklook/lightcurve.{self.plotformat}")
         self.log.info(f"Write {figure_name}")
         fig.savefig(figure_name)
         return None
@@ -197,7 +197,7 @@ class ExportSimulations:
         stacked_table = table_from_row_data(rows=[stacked_dict])
         stacked_table['time_start'] = self.time_start[0]
         stacked_table['time_stop' ] = self.time_stop[-1]
-        table_name = self.conf.OutputDirectory.joinpath(f"stacked_counts.ecsv")
+        table_name = self.conf.OutputDirectory.joinpath(f"quicklook/stacked_counts.ecsv")
         self.log.info(f"Write {table_name}")
         stacked_table.write(table_name)
         
@@ -225,7 +225,7 @@ class ExportSimulations:
         spectrum_table['counts_rate']= spectrum_table['counts'] / stacked_dict['livetime']
         spectrum_table['background_rate']= spectrum_table['background'] / stacked_dict['livetime']
         spectrum_table['excess_rate']= spectrum_table['excess'] / stacked_dict['livetime']
-        table_name = self.conf.OutputDirectory.joinpath(f"stacked_spectrum.ecsv")
+        table_name = self.conf.OutputDirectory.joinpath(f"quicklook/stacked_spectrum.ecsv")
         self.log.info(f"Write {table_name}")
         spectrum_table.write(table_name)
         
@@ -283,7 +283,7 @@ class ExportSimulations:
         ax.legend(bbox_to_anchor=(1.2, 1.0), loc="upper right")
         
         # Save Plot
-        figure_name = self.conf.OutputDirectory.joinpath(f"plots/stacked_spectrum.{self.plotformat}")
+        figure_name = self.conf.OutputDirectory.joinpath(f"quicklook/stacked_spectrum.{self.plotformat}")
         self.log.info(f"Write {figure_name}")
         fig.savefig(figure_name)
         return None

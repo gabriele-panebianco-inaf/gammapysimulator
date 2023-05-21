@@ -30,15 +30,15 @@ class TestRunSimulator:
         # Assert file existence
         assert os.path.isfile(OutputDirectory.joinpath("simulator.log"))
         assert os.path.isfile(OutputDirectory.joinpath("configuration.yaml"))
-        assert os.path.exists(OutputDirectory.joinpath("lightcurve.ecsv"))
-        assert os.path.exists(OutputDirectory.joinpath("lightcurve_cumulative.ecsv"))
         assert os.path.isfile(OutputDirectory.joinpath("models.yaml"))
         assert os.path.isfile(OutputDirectory.joinpath("models_covariance.dat"))
-        assert os.path.exists(OutputDirectory.joinpath("stacked_counts.ecsv"))
-        assert os.path.exists(OutputDirectory.joinpath("stacked_spectrum.ecsv"))
         
-        assert os.path.isfile(OutputDirectory.joinpath("plots/lightcurve.png"))
-        assert os.path.isfile(OutputDirectory.joinpath("plots/stacked_spectrum.png"))
+        assert os.path.exists(OutputDirectory.joinpath("quicklook/lightcurve.ecsv"))
+        assert os.path.exists(OutputDirectory.joinpath("quicklook/lightcurve_cumulative.ecsv"))
+        assert os.path.exists(OutputDirectory.joinpath("quicklook/stacked_counts.ecsv"))
+        assert os.path.exists(OutputDirectory.joinpath("quicklook/stacked_spectrum.ecsv"))
+        assert os.path.isfile(OutputDirectory.joinpath("quicklook/lightcurve.png"))
+        assert os.path.isfile(OutputDirectory.joinpath("quicklook/stacked_spectrum.png"))
         
         assert os.path.isfile(OutputDirectory.joinpath("irfs/effectivearea.png"))
         #assert os.path.isfile(OutputDirectory.joinpath("irfs/background.png"))
@@ -67,15 +67,15 @@ class TestRunSimulator:
         # Assert file existence
         assert os.path.isfile(OutputDirectory.joinpath("simulator.log"))
         assert os.path.isfile(OutputDirectory.joinpath("configuration.yaml"))
-        assert os.path.exists(OutputDirectory.joinpath("lightcurve.ecsv"))
-        assert os.path.exists(OutputDirectory.joinpath("lightcurve_cumulative.ecsv"))
         assert os.path.isfile(OutputDirectory.joinpath("models.yaml"))
         assert os.path.isfile(OutputDirectory.joinpath("models_covariance.dat"))
-        assert os.path.exists(OutputDirectory.joinpath("stacked_counts.ecsv"))
-        assert os.path.exists(OutputDirectory.joinpath("stacked_spectrum.ecsv"))
         
-        assert os.path.isfile(OutputDirectory.joinpath("plots/lightcurve.png"))
-        assert os.path.isfile(OutputDirectory.joinpath("plots/stacked_spectrum.png"))
+        assert os.path.exists(OutputDirectory.joinpath("quicklook/lightcurve.ecsv"))
+        assert os.path.exists(OutputDirectory.joinpath("quicklook/lightcurve_cumulative.ecsv"))
+        assert os.path.exists(OutputDirectory.joinpath("quicklook/stacked_counts.ecsv"))
+        assert os.path.exists(OutputDirectory.joinpath("quicklook/stacked_spectrum.ecsv"))
+        assert os.path.isfile(OutputDirectory.joinpath("quicklook/lightcurve.png"))
+        assert os.path.isfile(OutputDirectory.joinpath("quicklook/stacked_spectrum.png"))
         
         assert os.path.isfile(OutputDirectory.joinpath("irfs/BackgroundCountsSpectrum.png"))
         assert os.path.isfile(OutputDirectory.joinpath("irfs/BackgroundRates_bak.png"))
@@ -84,7 +84,7 @@ class TestRunSimulator:
         assert os.path.isfile(OutputDirectory.joinpath("irfs/EnergyDispersionProbability_rsp.png"))
         assert os.path.isfile(OutputDirectory.joinpath("irfs/Exposure.png"))
         
-        assert os.path.isfile(OutputDirectory.joinpath("datasets/datasets.fits"))
+        assert os.path.isfile(OutputDirectory.joinpath(f"datasets/datasets.fits"))
         assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked.fits"))
         #assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_arf.fits"))
         #assert os.path.isfile(OutputDirectory.joinpath(f"datasets/stacked_rmf.fits"))
