@@ -100,6 +100,9 @@ class Simulator:
         # Print
         self.log.info(models)
         
+        # plot
+        self.exporter.PlotTemporalModel(models[0].temporal_model)
+        
         return models
     
     def RunSimulation(self):

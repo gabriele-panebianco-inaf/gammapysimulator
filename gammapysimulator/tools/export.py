@@ -47,9 +47,10 @@ class ExportSimulations:
         self.log = conf.log
         
         # Make extra directories to store results
-        os.makedirs(self.conf.OutputDirectory.joinpath("quicklook"))
         os.makedirs(self.conf.OutputDirectory.joinpath("datasets"))
         os.makedirs(self.conf.OutputDirectory.joinpath("irfs"))
+        os.makedirs(self.conf.OutputDirectory.joinpath("models"))
+        os.makedirs(self.conf.OutputDirectory.joinpath("quicklook"))
         
         # Set Graphical options
         use(backend)
@@ -93,7 +94,7 @@ class ExportSimulations:
         """
         self.log.info(f"Write datasets...")
         self.datasets.write(self.conf.OutputDirectory.joinpath("datasets/datasets.fits"),
-                            filename_models=self.conf.OutputDirectory.joinpath("models.yaml")
+                            filename_models=self.conf.OutputDirectory.joinpath("models/models.yaml")
                             )
 
         return None
@@ -499,6 +500,29 @@ class ExportSimulations:
 
         # Save Plot
         figure_name = self.conf.OutputDirectory.joinpath(f"irfs/{filename}.{self.plotformat}")
+        self.log.info(f"Write {figure_name}")
+        fig.savefig(figure_name, facecolor = 'white')
+        
+        return None
+    
+    
+    def PlotTemporalModel(self, temporal_model):
+        """
+        Plot and save the temporal model.
+        
+        Parameters
+        ----------
+        temporal_model : gammapy.modelling.models.TemporalModel
+            Temporal Model to plot.
+        """
+        # Plot
+        fig, ax = plt.subplots(1, figsize=(9,5))
+        
+        PlotRange= (self.conf.timeRef+self.conf.timeStart, self.conf.timeRef+self.conf.timeStop)
+        temporal_model.plot(PlotRange, ax=ax)
+        
+        # Save Plot
+        figure_name = self.conf.OutputDirectory.joinpath(f"models/temporal.{self.plotformat}")
         self.log.info(f"Write {figure_name}")
         fig.savefig(figure_name, facecolor = 'white')
         

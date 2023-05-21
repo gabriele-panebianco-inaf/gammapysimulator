@@ -30,8 +30,10 @@ class TestRunSimulator:
         # Assert file existence
         assert os.path.isfile(OutputDirectory.joinpath("simulator.log"))
         assert os.path.isfile(OutputDirectory.joinpath("configuration.yaml"))
-        assert os.path.isfile(OutputDirectory.joinpath("models.yaml"))
-        assert os.path.isfile(OutputDirectory.joinpath("models_covariance.dat"))
+        
+        assert os.path.isfile(OutputDirectory.joinpath("models/models.yaml"))
+        assert os.path.isfile(OutputDirectory.joinpath("models/models_covariance.dat"))
+        assert os.path.isfile(OutputDirectory.joinpath("models/temporal.png"))
         
         assert os.path.exists(OutputDirectory.joinpath("quicklook/lightcurve.ecsv"))
         assert os.path.exists(OutputDirectory.joinpath("quicklook/lightcurve_cumulative.ecsv"))
@@ -67,8 +69,10 @@ class TestRunSimulator:
         # Assert file existence
         assert os.path.isfile(OutputDirectory.joinpath("simulator.log"))
         assert os.path.isfile(OutputDirectory.joinpath("configuration.yaml"))
-        assert os.path.isfile(OutputDirectory.joinpath("models.yaml"))
-        assert os.path.isfile(OutputDirectory.joinpath("models_covariance.dat"))
+        
+        assert os.path.isfile(OutputDirectory.joinpath("models/models.yaml"))
+        assert os.path.isfile(OutputDirectory.joinpath("models/models_covariance.dat"))
+        assert os.path.isfile(OutputDirectory.joinpath("models/temporal.png"))
         
         assert os.path.exists(OutputDirectory.joinpath("quicklook/lightcurve.ecsv"))
         assert os.path.exists(OutputDirectory.joinpath("quicklook/lightcurve_cumulative.ecsv"))
