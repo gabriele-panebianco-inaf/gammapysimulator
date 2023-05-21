@@ -10,9 +10,11 @@ import numpy as np
 import os
 import pytest
 
+from astropy import units as u
 from gammapy.data import Observations
 from gammapy.datasets import Datasets
-from gammapy.modeling.models import SkyModel, Models
+from gammapy.modeling import Fit
+from gammapy.modeling.models import SkyModel, Models, PowerLawSpectralModel
 
 from gammapysimulator.configure import configure
 from gammapysimulator.simulator import simulator
@@ -50,13 +52,26 @@ class TestSimulatorCTA:
         
         # Assert PSF Containment
         assert sourcesimulator.psf_containment
+
+        # Test Datasets attributes on IRFs: background, livetime, exposure
+        assert len(emptydatasets)==4
+        assert emptydatasets.energy_axes_are_aligned
+        assert emptydatasets.energy_ranges[0][0].value == pytest.approx(0.3)
+        assert emptydatasets.energy_ranges[1][0].value == pytest.approx(100)
+        for d in emptydatasets:
+            assert np.squeeze(d.background.data.sum())==pytest.approx(162, abs=1.0)
+            assert np.squeeze(d.gti.time_sum.to('s').value)==pytest.approx(3600, abs=1.0)
         
-        # Test Number of Observations
-        assert len(sourcesimulator.emptydatasets)==len(Mock_Observations)
+        stacked = emptydatasets.stack_reduce(name="stacked")
+        stacked_dict = stacked.info_dict()
+        assert stacked_dict['exposure_min'].value == pytest.approx( 2989892864.0, abs=1.0)
+        assert stacked_dict['exposure_max'].value == pytest.approx(17710960640.0, abs=1.0)
+        assert stacked_dict['livetime'].value == pytest.approx(14400, abs=1.0)
+        assert stacked_dict['ontime'].value == pytest.approx(14400, abs=1.0)
         
-        # TODO: Test Datasets attributes
+        return None
             
-    def test_Simulate1D(self, path_configuration_files):
+    def test_RunSimulation1D(self, path_configuration_files):
         """Test that Datasets are correctly set."""
         
         # Instantiate Simulator
@@ -102,5 +117,22 @@ class TestSimulatorCTA:
         assert stacked_dict['exposure_max'].value == pytest.approx(17710960640.0, abs=1.0)
         assert stacked_dict['livetime'].value == pytest.approx(14400, abs=1.0)
         assert stacked_dict['ontime'].value == pytest.approx(14400, abs=1.0)
+        
+        # Science validation: fit the model to get a result consistent with input
+        spectral_model = PowerLawSpectralModel(
+            amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
+            index=2.3,
+            reference=1 * u.TeV,
+            )
+        
+        datasets.models = [SkyModel(spectral_model=spectral_model, name="test")]
+        fit_joint = Fit()
+        result_joint = fit_joint.run(datasets=datasets)
+        best_fit_table = result_joint.models.to_parameters_table()
+        
+        # Assert Index
+        assert result_joint.models.parameters[0].value==pytest.approx(2.0,result_joint.models.parameters[0].error)
+        # Assert Amplitude
+        assert result_joint.models.parameters[1].value==pytest.approx(5.0E-12,result_joint.models.parameters[1].error)
         
         return None

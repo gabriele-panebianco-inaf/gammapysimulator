@@ -8,7 +8,7 @@ components:
             value: 2.0
             is_norm: false
         -   name: amplitude
-            value: 1.0e-1
+            value: 1.0e+1
             unit: cm-2 s-1 keV-1
             is_norm: true
         -   name: reference
@@ -31,5 +31,11 @@ components:
             is_norm: false
             frozen: true
     temporal:
-        type: ConstantTemporalModel
-        parameters: []
+        type: LightCurveTemplateTemporalModel
+        parameters:
+        -   name: t_ref
+            value: 57538.66745
+            unit: d
+        filename: $GAMMAPYSIMULATOR/test/data/lightcurve_GRB160530B.fits
+        format: table
+        unit: ''
